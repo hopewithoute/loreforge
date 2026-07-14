@@ -32,7 +32,6 @@ node_modules/
 frontend/dist/
 dist/
 *.tsbuildinfo
-dev.sh
 # Tooling and OS files
 .DS_Store
 .idea/

@@ -41,5 +41,5 @@ cd ..
 
 ## Limitations & Design Decisions
 - **In-Process Jobs:** The backend uses `FastAPI.BackgroundTasks` for asynchronous image generation. This is an intentional MVP design choice to minimize dependencies. However, if the server restarts while an asset is `pending`, the job will be lost. To mitigate this, stale pending assets are automatically reconciled and marked as `failed` upon startup.
-- **Anonymous Ownership:** The application relies on an anonymous `user_id` stored in the browser's LocalStorage to scope assets. This is not secure authentication, but it fulfills the assessment's isolation requirement.
+- **Anonymous Ownership:** The application relies on an anonymous `session_id` stored in an HttpOnly cookie to scope assets. This is not secure authentication, but it fulfills the assessment's isolation requirement.
 - **Media Serving:** Generated images in `/media` are currently publicly accessible to anyone who knows the exact filename.
