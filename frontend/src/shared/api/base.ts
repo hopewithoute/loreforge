@@ -1,35 +1,10 @@
+import createClient from "openapi-fetch";
+import type { paths } from "./schema";
+
 /**
- * Base API wrapper that automatically includes credentials (server-owned session cookies).
+ * Type-safe API client generated from the FastAPI OpenAPI schema.
  */
-export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = endpoint.startsWith("/api") ? endpoint : `/api${endpoint}`;
-
-  const headers = new Headers(options.headers);
-  if (!(options.body instanceof FormData) && !headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
-  }
-
-  const response = await fetch(url, {
-    ...options,
-    credentials: "include", // Crucial for server-owned session cookies
-    headers,
-  });
-
-  if (!response.ok) {
-    let errorMessage = `HTTP Error: ${response.status}`;
-    try {
-      const errorBody = await response.json();
-      errorMessage = errorBody.detail || errorBody.message || errorMessage;
-    } catch {
-      // Body might not be JSON
-    }
-    throw new Error(errorMessage);
-  }
-
-  // Handle 204 No Content or empty responses
-  if (response.status === 204) {
-    return {} as T;
-  }
-
-  return response.json();
-}
+export const client = createClient<paths>({
+  baseUrl: "/", // Base URL. The OpenAPI paths already include `/api/` (e.g. /api/assets/)
+  credentials: "include", // Crucial for server-owned session cookies
+});

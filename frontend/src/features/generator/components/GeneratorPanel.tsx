@@ -16,7 +16,7 @@ export function GeneratorPanel() {
     
     createAsset.mutate(formData, {
       onSuccess: (data) => {
-        setActiveAssetId(data.asset_id);
+        setActiveAssetId(data.id);
       },
       onError: (error) => {
         console.error("Failed to submit generation request", error);
