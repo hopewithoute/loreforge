@@ -22,9 +22,11 @@ def get_ai_provider() -> AIProvider:
     return CloudflareFluxAdapter()
 
 
-def get_asset_service(
-    db: Session = Depends(get_db), storage: StorageDriver = Depends(get_storage_driver)
-) -> AssetService:
+DbDep = Annotated[Session, Depends(get_db)]
+StorageDep = Annotated[StorageDriver, Depends(get_storage_driver)]
+
+
+def get_asset_service(db: DbDep, storage: StorageDep) -> AssetService:
     return AssetService(db, storage)
 
 
