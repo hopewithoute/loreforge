@@ -76,14 +76,15 @@ class CloudflareFluxAdapter(AIProvider):
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 response = await client.post(url, headers=headers, data=data, files=files)
 
-            if response.status_code in (401, 403):
-                raise ProviderConfigError("Cloudflare API token is invalid or lacks permissions.")
-            elif response.status_code == 429:
-                raise ProviderRateLimitError("Cloudflare AI rate limit exceeded.")
-            elif 400 <= response.status_code < 500:
-                raise ProviderUnavailableError(f"Cloudflare returned {response.status_code} client error.")
-            elif response.status_code >= 500:
-                raise ProviderUnavailableError(f"Cloudflare returned {response.status_code} server error.")
+            match response.status_code:
+                case 401 | 403:
+                    raise ProviderConfigError("Cloudflare API token is invalid or lacks permissions.")
+                case 429:
+                    raise ProviderRateLimitError("Cloudflare AI rate limit exceeded.")
+                case code if 400 <= code < 500:
+                    raise ProviderUnavailableError(f"Cloudflare returned {code} client error.")
+                case code if code >= 500:
+                    raise ProviderUnavailableError(f"Cloudflare returned {code} server error.")
 
             response.raise_for_status()
 
