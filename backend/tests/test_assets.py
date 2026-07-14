@@ -86,3 +86,47 @@ def test_create_asset_with_large_file(client, monkeypatch):
     )
     assert response.status_code == 413
     assert "UPLOAD_TOO_LARGE" in response.json()["detail"]
+
+
+def test_evolve_asset_success(client):
+    # First create an asset
+    response = client.post(
+        "/api/assets/",
+        data={"prompt": "a base sword", "category": "prop", "style": "pixel_art"},
+    )
+    parent_id = response.json()["id"]
+
+    # Now evolve it
+    evolve_response = client.post(
+        f"/api/assets/{parent_id}/evolve",
+        json={"prompt": "an evolved sword", "category": "prop", "style": "pixel_art"}
+    )
+    
+    assert evolve_response.status_code == 202
+    evolve_data = evolve_response.json()
+    assert evolve_data["id"] != parent_id
+    assert evolve_data["parent_id"] == parent_id
+    assert evolve_data["prompt"] == "an evolved sword"
+    assert evolve_data["category"] == "prop"
+    assert evolve_data["style"] == "pixel_art"
+
+
+def test_evolve_asset_wrong_user(client):
+    # Create an asset
+    response = client.post(
+        "/api/assets/",
+        data={"prompt": "a base sword", "category": "prop", "style": "pixel_art"},
+    )
+    parent_id = response.json()["id"]
+
+    # Clear cookie to simulate different user
+    client.cookies.clear()
+
+    # Try to evolve it
+    evolve_response = client.post(
+        f"/api/assets/{parent_id}/evolve",
+        json={"prompt": "an evolved sword", "category": "prop", "style": "pixel_art"}
+    )
+    
+    assert evolve_response.status_code == 404
+    assert evolve_response.json()["detail"] == "Parent asset not found"

@@ -1,11 +1,14 @@
 import io
 
+from datetime import UTC, datetime, timedelta
+
 import pytest
 from PIL import Image
 from sqlalchemy.orm import Session
 
+from app.db.schema import Asset
 from app.models.asset import AssetCategory, AssetCreate, AssetStatus, AssetStyle
-from app.services.asset_service import AssetService
+from app.services.asset_service import AssetService, reconcile_stale_assets
 from app.storage.base import StorageDriver
 
 
@@ -114,3 +117,34 @@ def test_asset_service_status_updates(db_session: Session):
     assert current_asset is not None
     assert current_asset.status == AssetStatus.success
     assert current_asset.error_code is None
+
+
+def test_reconcile_stale_assets(db_session: Session):
+    
+    storage = MockStorageDriver()
+    service = AssetService(db_session, storage)
+
+    # Create one recent pending asset
+    recent_data = AssetCreate(prompt="recent", category=AssetCategory.prop, style=AssetStyle.pixel_art)
+    recent_asset = service.create_asset("u1", recent_data)
+
+    # Create one stale pending asset (older than 5 minutes)
+    stale_data = AssetCreate(prompt="stale", category=AssetCategory.prop, style=AssetStyle.pixel_art)
+    stale_asset = service.create_asset("u1", stale_data)
+    
+    # Manually backdate the stale asset in the DB
+    stale_orm = db_session.query(Asset).filter_by(id=stale_asset.id).first()
+    stale_orm.created_at = datetime.now(UTC) - timedelta(minutes=10)
+    db_session.commit()
+
+    # Reconcile
+    reconciled_count = reconcile_stale_assets(db_session)
+    assert reconciled_count == 1
+    
+    # Check states
+    recent_check = service.get_asset(recent_asset.id, "u1")
+    assert recent_check.status == AssetStatus.pending
+    
+    stale_check = service.get_asset(stale_asset.id, "u1")
+    assert stale_check.status == AssetStatus.failed
+    assert stale_check.error_code == "INTERNAL_ERROR"
