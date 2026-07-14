@@ -39,7 +39,7 @@ def validate_image_upload(
 
     if reference_image.content_type not in (MimeType.JPEG, MimeType.PNG):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=ErrorCode.INVALID_FILE_TYPE,
         )
 
@@ -48,7 +48,7 @@ def validate_image_upload(
 
     if len(reference_bytes) > max_bytes:
         raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
             detail=ErrorCode.UPLOAD_TOO_LARGE,
         )
 
