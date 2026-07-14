@@ -1,8 +1,10 @@
+import contextlib
 import logging
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import cast
 
+import fsspec
 from sqlalchemy import CursorResult, select, update
 from sqlalchemy.orm import Session
 
@@ -10,11 +12,10 @@ from app.core.constants import ErrorCode
 from app.db.schema import Asset
 from app.models.asset import AssetCreate, AssetEvolve, AssetRead, AssetStatus
 from app.services.image_utils import prepare_provider_image
-from app.storage.base import StorageDriver
 
 
 class AssetService:
-    def __init__(self, session: Session, storage: StorageDriver):
+    def __init__(self, session: Session, storage: fsspec.AbstractFileSystem):
         self._db = session
         self._storage = storage
 
@@ -44,15 +45,15 @@ class AssetService:
             # Step 1: Handle physical file persistence first
             if reference_bytes and reference_ext:
                 # Store the exact uploaded file for user reference/gallery viewing
-                original_path = self._storage.save(
-                    asset_id, f"original{reference_ext}", reference_bytes
-                )
+                original_path = f"assets/{asset_id}/original{reference_ext}"
+                self._storage.pipe_file(original_path, reference_bytes)
                 asset.reference_image_path = original_path
 
                 # Create a downscaled copy specifically formatted for the AI provider
                 # (e.g., max 511px for Cloudflare FLUX)
                 prepared_bytes = prepare_provider_image(reference_bytes)
-                prepared_path = self._storage.save(asset_id, "prepared.png", prepared_bytes)
+                prepared_path = f"assets/{asset_id}/prepared.png"
+                self._storage.pipe_file(prepared_path, prepared_bytes)
                 asset.prepared_input_path = prepared_path
 
             # Step 2: Attempt to persist the database record
@@ -66,7 +67,8 @@ class AssetService:
             # If the database fails (e.g. SQLite locked), we must sweep any newly
             # created images to prevent digital garbage/orphan files on disk.
             self._db.rollback()
-            self._storage.delete_directory(asset_id)
+            with contextlib.suppress(FileNotFoundError):
+                self._storage.rm(f"assets/{asset_id}", recursive=True)
             raise e
 
     def get_asset(self, asset_id: str, user_id: str) -> AssetRead | None:

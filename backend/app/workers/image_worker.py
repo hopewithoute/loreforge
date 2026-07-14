@@ -1,6 +1,10 @@
 import asyncio
+import contextlib
 import logging
 import uuid
+from typing import cast
+
+import fsspec
 
 from app.api.deps import get_ai_provider, get_storage_driver
 from app.core.constants import ErrorCode
@@ -10,7 +14,6 @@ from app.models.asset import AssetStatus
 from app.providers.base import AIProvider
 from app.services.asset_service import AssetService
 from app.services.prompt_builder import build_prompt
-from app.storage.base import StorageDriver
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +39,7 @@ async def _process_generation(
     asset_id: str,
     user_id: str,
     service: AssetService,
-    storage: StorageDriver,
+    storage: fsspec.AbstractFileSystem,
     provider: AIProvider,
 ) -> None:
     """
@@ -58,9 +61,9 @@ async def _process_generation(
         # 1. Prepare inputs
         prompt = build_prompt(asset.category, asset.style, asset.prompt)
 
-        reference_bytes = None
+        reference_bytes: bytes | None = None
         if asset.prepared_input_path:
-            reference_bytes = storage.read(asset.prepared_input_path)
+            reference_bytes = cast(bytes, storage.cat_file(asset.prepared_input_path))
 
         # 2. Generate Image
         result = await provider.generate(
@@ -70,7 +73,8 @@ async def _process_generation(
 
         # 3. Save Image to a temporary distinct filename
         temp_filename = f"generated_{uuid.uuid4().hex[:8]}.png"
-        final_path = storage.save(asset_id, temp_filename, result.image_bytes)
+        final_path = f"assets/{asset_id}/{temp_filename}"
+        storage.pipe_file(final_path, result.image_bytes)
 
         # 4. Mark success atomically
         updated_asset = service.mark_as_success(
@@ -87,7 +91,8 @@ async def _process_generation(
         if not updated_asset:
             # We lost the database race! Another worker already successfully marked this asset.
             logger.info(f"Asset {asset_id} was already completed. Discarding output {final_path}.")
-            storage.delete_file(final_path)
+            with contextlib.suppress(FileNotFoundError):
+                storage.rm(final_path)
         else:
             logger.info(f"Successfully generated and saved asset {asset_id} at {final_path}.")
 

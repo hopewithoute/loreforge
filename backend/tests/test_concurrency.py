@@ -2,6 +2,7 @@ import asyncio
 import tempfile
 from pathlib import Path
 
+import fsspec
 import pytest
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
@@ -10,7 +11,6 @@ from app.db.schema import Base
 from app.models.asset import AssetCategory, AssetCreate, AssetStatus, AssetStyle
 from app.providers.cloudflare_flux import CloudflareFluxAdapter
 from app.services.asset_service import AssetService
-from app.storage.local_storage import LocalStorageDriver
 from app.workers.image_worker import _process_generation
 
 
@@ -45,7 +45,7 @@ def test_sqlite_concurrency():
         Base.metadata.create_all(bind=engine)
         TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-        storage = LocalStorageDriver()
+        storage = fsspec.filesystem("memory")
         provider = CloudflareFluxAdapter()
 
         # Setup initial state
@@ -120,7 +120,7 @@ def test_same_asset_race_condition():
         Base.metadata.create_all(bind=engine)
         TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-        storage = LocalStorageDriver()
+        storage = fsspec.filesystem("memory")
 
         # Setup initial state
         with TestSessionLocal() as db:
