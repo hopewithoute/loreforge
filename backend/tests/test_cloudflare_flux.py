@@ -13,6 +13,7 @@ from app.core.errors import (
     ProviderRateLimitError,
     ProviderUnavailableError,
 )
+from app.providers.base import GeneratedImageExtension
 from app.providers.cloudflare_flux import CloudflareFluxAdapter
 
 
@@ -22,10 +23,10 @@ def mock_cloudflare_adapter():
     pass
 
 
-def create_valid_png_base64() -> str:
+def create_valid_image_base64(image_format: str) -> str:
     img = Image.new("RGB", (10, 10), color="red")
     buf = io.BytesIO()
-    img.save(buf, format="PNG")
+    img.save(buf, format=image_format)
     return base64.b64encode(buf.getvalue()).decode("utf-8")
 
 
@@ -51,8 +52,15 @@ _original_client = httpx.AsyncClient
 
 
 @pytest.mark.anyio
-async def test_generate_success(adapter, monkeypatch):
-    b64 = create_valid_png_base64()
+@pytest.mark.parametrize(
+    ("image_format", "expected_extension"),
+    [
+        ("PNG", GeneratedImageExtension.PNG),
+        ("JPEG", GeneratedImageExtension.JPEG),
+    ],
+)
+async def test_generate_success(adapter, monkeypatch, image_format, expected_extension):
+    b64 = create_valid_image_base64(image_format)
 
     def handler(req):
         request_data = parse_qs(req.content.decode())
@@ -69,6 +77,7 @@ async def test_generate_success(adapter, monkeypatch):
     res = await adapter.generate("test prompt")
     assert res.provider_name == "cloudflare"
     assert res.image_bytes is not None
+    assert res.extension == expected_extension
 
 
 @pytest.mark.anyio

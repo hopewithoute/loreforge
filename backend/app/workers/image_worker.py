@@ -71,9 +71,9 @@ async def _process_generation(
             reference_image_bytes=reference_bytes,
         )
 
-        # 3. Save Image to a temporary distinct filename
-        temp_filename = f"generated_{uuid.uuid4().hex[:8]}.png"
-        final_path = f"assets/{asset_id}/{temp_filename}"
+        # 3. Save Image to a distinct output filename
+        output_filename = f"generated_{uuid.uuid4().hex}{result.extension.value}"
+        final_path = f"assets/{asset_id}/{output_filename}"
         storage.pipe_file(final_path, result.image_bytes)
 
         # 4. Mark success atomically

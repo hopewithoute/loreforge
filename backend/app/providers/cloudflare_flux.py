@@ -2,6 +2,7 @@ import asyncio
 import base64
 import io
 import logging
+from typing import ClassVar
 
 import httpx
 from PIL import Image
@@ -16,7 +17,7 @@ from app.core.errors import (
     ProviderTimeoutError,
     ProviderUnavailableError,
 )
-from app.providers.base import AIProvider, GeneratedImageResult
+from app.providers.base import AIProvider, GeneratedImageExtension, GeneratedImageResult
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,10 @@ class CloudflareResponse(BaseModel):
 
 
 class CloudflareFluxAdapter(AIProvider):
-    SUPPORTED_FORMATS = ("PNG", "JPEG")
+    OUTPUT_EXTENSIONS: ClassVar[dict[str, GeneratedImageExtension]] = {
+        "PNG": GeneratedImageExtension.PNG,
+        "JPEG": GeneratedImageExtension.JPEG,
+    }
 
     def __init__(self, config: Settings | None = None):
         runtime = config or settings
@@ -129,12 +133,13 @@ class CloudflareFluxAdapter(AIProvider):
                 raise ProviderBrokenResponseError("Failed to decode Base64 image payload.") from e
 
             try:
-                img = Image.open(io.BytesIO(image_bytes))
-                img.verify()
-                if img.format not in self.SUPPORTED_FORMATS:
-                    raise ProviderBrokenResponseError(
-                        f"Cloudflare returned unsupported format: {img.format}"
-                    )
+                with Image.open(io.BytesIO(image_bytes)) as img:
+                    extension = self.OUTPUT_EXTENSIONS.get(img.format or "")
+                    if extension is None:
+                        raise ProviderBrokenResponseError(
+                            f"Cloudflare returned unsupported format: {img.format}"
+                        )
+                    img.verify()
             except ProviderBrokenResponseError:
                 raise
             except Exception as e:
@@ -144,6 +149,7 @@ class CloudflareFluxAdapter(AIProvider):
 
             return GeneratedImageResult(
                 image_bytes=image_bytes,
+                extension=extension,
                 provider_name="cloudflare",
                 provider_model=self.model,
             )

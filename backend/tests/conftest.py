@@ -9,7 +9,7 @@ from sqlalchemy.pool import StaticPool
 import app.api.v1.assets
 from app.api.deps import get_db
 from app.db.schema import Base
-from app.providers.base import GeneratedImageResult
+from app.providers.base import GeneratedImageExtension, GeneratedImageResult
 from app.providers.cloudflare_flux import CloudflareFluxAdapter
 from main import app
 
@@ -43,6 +43,7 @@ def mock_cloudflare_adapter(monkeypatch):
 
         return GeneratedImageResult(
             image_bytes=buf.getvalue(),
+            extension=GeneratedImageExtension.PNG,
             provider_name="cloudflare",
             provider_model="mock_model",
             seed=42,
