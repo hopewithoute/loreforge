@@ -33,3 +33,9 @@ class LocalStorageDriver:
         asset_dir = self.media_root / "assets" / asset_id
         if asset_dir.exists() and asset_dir.is_dir():
             shutil.rmtree(asset_dir, ignore_errors=True)
+
+    def read(self, relative_path: str) -> bytes:
+        file_path = self.media_root / relative_path
+        if not file_path.exists():
+            raise FileNotFoundError(f"Storage cannot find file: {relative_path}")
+        return file_path.read_bytes()

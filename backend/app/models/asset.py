@@ -38,6 +38,7 @@ class AssetRead(BaseModel):
     prompt: str
 
     reference_image_path: str | None
+    prepared_input_path: str | None
     generated_image_path: str | None
     parent_id: str | None
 

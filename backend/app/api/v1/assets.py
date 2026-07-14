@@ -1,15 +1,17 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Form, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Form, HTTPException, status
 
 from app.api.deps import AssetServiceDep, SessionDep, ValidImageDep
 from app.models.asset import AssetCategory, AssetCreate, AssetRead, AssetStyle
+from app.workers.image_worker import generate_image_task
 
 router = APIRouter(prefix="/api/assets", tags=["assets"])
 
 
 @router.post("/", status_code=status.HTTP_202_ACCEPTED)
 def create_asset(
+    background_tasks: BackgroundTasks,
     session_id: SessionDep,
     service: AssetServiceDep,
     prompt: Annotated[str, Form(min_length=3)],
@@ -21,12 +23,17 @@ def create_asset(
     reference_bytes, reference_ext = image_data
     data = AssetCreate(prompt=prompt, category=category, style=style, parent_id=parent_id)
 
-    return service.create_asset(
+    asset = service.create_asset(
         user_id=session_id,
         data=data,
         reference_bytes=reference_bytes,
         reference_ext=reference_ext,
     )
+
+    # Offload the AI generation and disk IO to the background worker
+    background_tasks.add_task(generate_image_task, asset.id, session_id)
+
+    return asset
 
 
 @router.get("/{asset_id}")

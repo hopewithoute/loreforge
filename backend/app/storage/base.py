@@ -15,3 +15,9 @@ class StorageDriver(Protocol):
         Useful for cleanup if request fails.
         """
         ...
+
+    def read(self, relative_path: str) -> bytes:
+        """
+        Reads content from the storage backend based on a relative path.
+        """
+        ...
