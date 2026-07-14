@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from app.config import Settings
+from app.core.config import Settings
 
 
 def test_settings_loads_values_from_dotenv_file(tmp_path: Path) -> None:

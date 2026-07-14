@@ -2,7 +2,7 @@ from pathlib import Path
 
 from sqlalchemy import text
 
-from app.database import (
+from app.db.database import (
     SQLITE_BUSY_TIMEOUT_MS,
     create_database_engine,
     create_session_factory,
