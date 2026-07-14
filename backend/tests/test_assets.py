@@ -60,3 +60,30 @@ def test_get_asset_wrong_user(client):
     client.cookies.clear()
     response2 = client.get(f"/api/assets/{asset_id}")
     assert response2.status_code == 404
+
+
+def test_create_asset_with_invalid_file_type(client):
+    response = client.post(
+        "/api/assets/",
+        data={"prompt": "a beautiful sword", "category": "prop", "style": "pixel_art"},
+        files={"reference_image": ("test.pdf", b"fake_pdf_content", "application/pdf")},
+    )
+    assert response.status_code == 422
+    assert "INVALID_FILE_TYPE" in response.json()["detail"]
+
+
+def test_create_asset_with_large_file(client, monkeypatch):
+    from app.core.config import settings
+
+    # Temporarily set max_upload_mb to 0.0001 (100 bytes) for this test
+    monkeypatch.setattr(settings, "max_upload_mb", 0.0001)
+
+    large_content = b"x" * 200  # 200 bytes
+
+    response = client.post(
+        "/api/assets/",
+        data={"prompt": "a beautiful sword", "category": "prop", "style": "pixel_art"},
+        files={"reference_image": ("test.png", large_content, "image/png")},
+    )
+    assert response.status_code == 413
+    assert "UPLOAD_TOO_LARGE" in response.json()["detail"]
