@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+@theme {
+  /* Hallmark Lumen Theme Tokens (Atmospheric cluster, Night Foundry) */
+  --font-sans: "Geist Sans", "Inter", system-ui, sans-serif;
+  --font-serif: "Instrument Serif", ui-serif, serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", monospace;
+  
+  --color-paper: oklch(14% 0.01 260);     /* Deep dark canvas */
+  --color-paper-2: oklch(18% 0.01 260);   /* Elevated card */
+  --color-paper-3: oklch(22% 0.01 260);   /* Hover state */
+  
+  --color-ink: oklch(92% 0 0);            /* Primary text */
+  --color-ink-2: oklch(70% 0 0);          /* Secondary text */
+  --color-ink-3: oklch(45% 0 0);          /* Borders / Muted */
+  
+  --color-accent: oklch(75% 0.15 50);     /* Warm amber/gold focal point */
+  --color-accent-hover: oklch(80% 0.15 50);
+  
+  --color-danger: oklch(65% 0.20 25);     /* Error states */
+  --color-success: oklch(75% 0.15 150);   /* Success states */
+}
+
+:root {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  color-scheme: dark;
+}
+
+html, body {
+  overflow-x: clip;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+/* Microinteractions base classes */
+.btn {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn:active {
+  transform: translateY(1px);
+}
+
+@keyframes drift {
+  0% { transform: scale(1.05) translate(0, 0); }
+  100% { transform: scale(1.1) translate(-2%, 2%); }
+}
