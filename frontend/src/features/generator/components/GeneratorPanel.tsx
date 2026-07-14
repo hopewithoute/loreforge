@@ -8,7 +8,7 @@ export function GeneratorPanel() {
   const [activeAssetId, setActiveAssetId] = useState<string | null>(null);
   
   const createAsset = useCreateAsset();
-  const { data: asset, isLoading: isStatusLoading } = useAssetStatus(activeAssetId);
+  const { data: asset } = useAssetStatus(activeAssetId);
 
   const handleSubmit = (formData: FormData) => {
     // Optimistically reset active asset so the loading state begins immediately

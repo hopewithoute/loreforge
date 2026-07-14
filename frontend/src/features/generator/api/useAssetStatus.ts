@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { client } from '../../../shared/api/base';
-import { Asset } from '../types';
 
 export function useAssetStatus(assetId: string | null) {
   return useQuery({
@@ -18,7 +17,7 @@ export function useAssetStatus(assetId: string | null) {
         throw new Error("Failed to fetch asset");
       }
       
-      return data as Asset;
+      return data;
     },
     enabled: !!assetId,
     // Polling magic: Refetch every 3 seconds ONLY if the status is still 'pending'
@@ -27,7 +26,7 @@ export function useAssetStatus(assetId: string | null) {
       return query.state.data.status === 'pending' ? 3000 : false;
     },
     // Don't retry on 404s or other hard errors during polling to avoid infinite loops
-    retry: (failureCount, error) => {
+    retry: (failureCount) => {
       return failureCount < 3;
     },
   });

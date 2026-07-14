@@ -1,4 +1,3 @@
-import { FormEvent, useRef } from 'react';
 import { CATEGORY_OPTIONS, STYLE_OPTIONS } from '../types';
 
 interface GeneratorFormProps {
@@ -7,18 +6,22 @@ interface GeneratorFormProps {
 }
 
 export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
-  const formRef = useRef<HTMLFormElement>(null);
+  const action = (formData: FormData) => {
+    if (isPending) return;
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!formRef.current || isPending) return;
+    const prompt = formData.get('prompt') as string;
+    const refImage = formData.get('reference_image') as File | null;
 
-    const formData = new FormData(formRef.current);
+    if (!prompt.trim() && (!refImage || refImage.size === 0)) {
+      alert("Please provide either a Core Prompt or a Reference Image (or both) to Forge.");
+      return;
+    }
+
     onSubmit(formData);
   };
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-6">
+    <form action={action} className="flex flex-col gap-6">
       <div className="grid grid-cols-2 gap-4">
         {/* Category Field */}
         <div className="flex flex-col gap-2">
@@ -74,13 +77,11 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
       {/* Prompt Field */}
       <div className="flex flex-col gap-2">
         <label htmlFor="prompt" className="text-xs font-mono text-ink-3 uppercase tracking-wider">
-          Core Prompt
+          Core Prompt <span className="opacity-50">(Required if no image)</span>
         </label>
         <textarea
           name="prompt"
           id="prompt"
-          required
-          minLength={3}
           disabled={isPending}
           placeholder="Describe your vision (e.g., A ruined monolithic temple in a dense foggy forest)"
           className="w-full h-32 resize-none bg-paper-2 border border-ink-3/20 rounded-lg py-4 px-4 text-ink font-sans focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-colors placeholder:text-ink-3/50 disabled:opacity-50"

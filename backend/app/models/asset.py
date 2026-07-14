@@ -24,7 +24,7 @@ class AssetStatus(StrEnum):
 
 
 class AssetCreate(BaseModel):
-    prompt: str = Field(min_length=3)
+    prompt: str = ""
     category: AssetCategory
     style: AssetStyle
     parent_id: str | None = None

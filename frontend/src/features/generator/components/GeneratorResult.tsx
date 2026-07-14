@@ -1,4 +1,4 @@
-import { Asset } from '../types';
+import { type Asset } from '../types';
 import { LoadingRotator } from './LoadingRotator';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -44,7 +44,7 @@ export function GeneratorResult({ asset, isPending }: GeneratorResultProps) {
         )}
 
         {/* State 3: Success Image */}
-        {asset?.status === 'success' && asset.image_url && !isPending && (
+        {asset?.status === 'success' && asset.generated_image_path && !isPending && (
           <motion.div 
             key="success"
             initial={{ opacity: 0, scale: 0.95 }}
@@ -53,7 +53,7 @@ export function GeneratorResult({ asset, isPending }: GeneratorResultProps) {
             className="absolute inset-0 p-4 flex items-center justify-center"
           >
             <img 
-              src={asset.image_url} 
+              src={asset.generated_image_path} 
               alt={asset.prompt} 
               className="w-full h-full object-contain rounded-lg shadow-2xl"
             />

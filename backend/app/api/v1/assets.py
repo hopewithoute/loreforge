@@ -14,13 +14,16 @@ def create_asset(
     background_tasks: BackgroundTasks,
     session_id: SessionDep,
     service: AssetServiceDep,
-    prompt: Annotated[str, Form(min_length=3)],
+    prompt: Annotated[str, Form()] = "",
     category: Annotated[AssetCategory, Form()],
     style: Annotated[AssetStyle, Form()],
     image_data: ValidImageDep,
     parent_id: Annotated[str | None, Form()] = None,
 ) -> AssetRead:
     reference_bytes, reference_ext = image_data
+    if not prompt and not reference_bytes:
+        raise HTTPException(status_code=422, detail="Must provide either a prompt or a reference image")
+        
     data = AssetCreate(prompt=prompt, category=category, style=style, parent_id=parent_id)
 
     asset = service.create_asset(
