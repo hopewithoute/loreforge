@@ -1,10 +1,11 @@
 import uuid
 from typing import Annotated
 
-from fastapi import Cookie, Depends, File, HTTPException, Response, UploadFile
+from fastapi import Cookie, Depends, File, HTTPException, Response, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.constants import ErrorCode, MimeType
 from app.db.database import get_db
 from app.providers.base import AIProvider
 from app.providers.cloudflare_flux import CloudflareFluxAdapter
@@ -21,22 +22,37 @@ def get_ai_provider() -> AIProvider:
     return CloudflareFluxAdapter()
 
 
+def get_asset_service(
+    db: Session = Depends(get_db), storage: StorageDriver = Depends(get_storage_driver)
+) -> AssetService:
+    return AssetService(db, storage)
+
+
+AssetServiceDep = Annotated[AssetService, Depends(get_asset_service)]
+
+
 def validate_image_upload(
     reference_image: Annotated[UploadFile | None, File()] = None,
 ) -> tuple[bytes | None, str | None]:
     if not reference_image:
         return None, None
 
-    if reference_image.content_type not in ("image/jpeg", "image/png"):
-        raise HTTPException(status_code=422, detail="INVALID_FILE_TYPE")
+    if reference_image.content_type not in (MimeType.JPEG, MimeType.PNG):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=ErrorCode.INVALID_FILE_TYPE,
+        )
 
     reference_bytes = reference_image.file.read()
     max_bytes = settings.max_upload_mb * 1024 * 1024
 
     if len(reference_bytes) > max_bytes:
-        raise HTTPException(status_code=413, detail="UPLOAD_TOO_LARGE")
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=ErrorCode.UPLOAD_TOO_LARGE,
+        )
 
-    reference_ext = ".png" if reference_image.content_type == "image/png" else ".jpg"
+    reference_ext = ".png" if reference_image.content_type == MimeType.PNG else ".jpg"
     return reference_bytes, reference_ext
 
 
@@ -63,11 +79,4 @@ def get_session_id(
     return session_id
 
 
-def get_asset_service(
-    db: Session = Depends(get_db), storage: StorageDriver = Depends(get_storage_driver)
-) -> AssetService:
-    return AssetService(db, storage)
-
-
 SessionDep = Annotated[str, Depends(get_session_id)]
-AssetServiceDep = Annotated[AssetService, Depends(get_asset_service)]

@@ -4,6 +4,8 @@ from datetime import datetime
 from sqlalchemy import DateTime, String, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+from app.models.asset import AssetStatus
+
 
 class Base(DeclarativeBase):
     pass
@@ -23,7 +25,7 @@ class Asset(Base):
     generated_image_path: Mapped[str | None] = mapped_column(String)
     parent_id: Mapped[str | None] = mapped_column(String)
 
-    status: Mapped[str] = mapped_column(String, default="pending")
+    status: Mapped[str] = mapped_column(String, default=AssetStatus.pending.value)
     error_code: Mapped[str | None] = mapped_column(String)
     error_message: Mapped[str | None] = mapped_column(String)
 

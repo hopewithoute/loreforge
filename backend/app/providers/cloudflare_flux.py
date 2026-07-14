@@ -4,6 +4,7 @@ import logging
 import httpx
 
 from app.core.config import settings
+from app.core.constants import MimeType
 from app.core.errors import (
     ProviderBrokenResponseError,
     ProviderConfigError,
@@ -53,7 +54,7 @@ class CloudflareFluxAdapter(AIProvider):
             # Send the reference image as multipart file payload if present.
             # Note: image_bytes is guaranteed to be PNG here because
             # it was normalized by image_utils.prepare_provider_image.
-            files = {"input_image_0": ("reference.png", reference_image_bytes, "image/png")}
+            files = {"input_image_0": ("reference.png", reference_image_bytes, MimeType.PNG)}
 
         logger.info(f"Dispatching to Cloudflare AI [{self.model}] with timeout {self.timeout}s.")
         # DO NOT log headers to prevent leaking tokens

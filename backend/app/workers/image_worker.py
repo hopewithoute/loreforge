@@ -2,8 +2,10 @@ import asyncio
 import logging
 
 from app.api.deps import get_ai_provider, get_storage_driver
+from app.core.constants import ErrorCode
 from app.core.errors import ProviderError
 from app.db.database import SessionLocal
+from app.models.asset import AssetStatus
 from app.providers.base import AIProvider
 from app.services.asset_service import AssetService
 from app.services.prompt_builder import build_prompt
@@ -30,7 +32,7 @@ async def _process_generation(
         return
 
     # Guard condition: only process pending requests
-    if asset.status != "pending":
+    if asset.status != AssetStatus.pending.value:
         logger.info(f"Asset {asset_id} is no longer pending. Exiting.")
         return
 
@@ -82,7 +84,9 @@ async def _process_generation(
         service.mark_as_failed(asset_id, user_id, error_code, str(e))
     except Exception as e:
         logger.exception(f"Unexpected error generating asset {asset_id}: {e}")
-        service.mark_as_failed(asset_id, user_id, "INTERNAL_ERROR", "An unexpected error occurred.")
+        service.mark_as_failed(
+            asset_id, user_id, ErrorCode.INTERNAL_ERROR, "An unexpected error occurred."
+        )
 
 
 def generate_image_task(asset_id: str, user_id: str) -> None:

@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.schema import Asset
-from app.models.asset import AssetCreate, AssetRead
+from app.models.asset import AssetCreate, AssetRead, AssetStatus
 from app.services.image_utils import prepare_provider_image
 from app.storage.base import StorageDriver
 
@@ -77,7 +77,7 @@ class AssetService:
     def update_status(self, asset_id: str, user_id: str, status: str, **kwargs) -> AssetRead | None:
         asset = self._get_asset_orm(asset_id, user_id)
 
-        if not asset or asset.status != "pending":
+        if not asset or asset.status != AssetStatus.pending.value:
             return AssetRead.model_validate(asset) if asset else None
 
         asset.status = status
@@ -98,7 +98,7 @@ class AssetService:
         return self.update_status(
             asset_id,
             user_id,
-            status="success",
+            status=AssetStatus.success.value,
             generated_image_path=generated_image_path,
             **provider_info,
         )
@@ -109,7 +109,7 @@ class AssetService:
         return self.update_status(
             asset_id,
             user_id,
-            status="failed",
+            status=AssetStatus.failed.value,
             error_code=error_code,
             error_message=error_message,
         )
