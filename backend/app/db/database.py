@@ -1,3 +1,4 @@
+import sqlite3
 from collections.abc import Generator
 from pathlib import Path
 from typing import Any
@@ -9,6 +10,17 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.core.config import settings
 
 SQLITE_BUSY_TIMEOUT_MS = 5_000
+
+
+def configure_sqlite(dbapi_connection: sqlite3.Connection, _connection_record: Any) -> None:
+    """Configure SQLite PRAGMAs on connection."""
+    cursor = dbapi_connection.cursor()
+    try:
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute(f"PRAGMA busy_timeout={SQLITE_BUSY_TIMEOUT_MS}")
+        cursor.execute("PRAGMA foreign_keys=ON")
+    finally:
+        cursor.close()
 
 
 def _ensure_sqlite_parent(database_url: str) -> None:
@@ -26,16 +38,7 @@ def create_database_engine(database_url: str) -> Engine:
     engine = create_engine(database_url, connect_args=connect_args)
 
     if is_sqlite:
-
-        @event.listens_for(engine, "connect")
-        def configure_sqlite(dbapi_connection: Any, _connection_record: Any) -> None:
-            cursor = dbapi_connection.cursor()
-            try:
-                cursor.execute("PRAGMA journal_mode=WAL")
-                cursor.execute(f"PRAGMA busy_timeout={SQLITE_BUSY_TIMEOUT_MS}")
-                cursor.execute("PRAGMA foreign_keys=ON")
-            finally:
-                cursor.close()
+        event.listen(engine, "connect", configure_sqlite)
 
     return engine
 

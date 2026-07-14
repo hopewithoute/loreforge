@@ -1,5 +1,8 @@
 # Environment and secrets
 docs
+.agents
+skills-lock.json
+.codex
 .env
 .env.*
 !.env.example
