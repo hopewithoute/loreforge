@@ -114,7 +114,7 @@ class AssetService:
             )
             .values(status=status, **kwargs)
         )
-        
+
         result = cast(CursorResult, self._db.execute(stmt))
         self._db.commit()
 
@@ -166,10 +166,7 @@ def reconcile_stale_assets(db: Session) -> int:
 
     stmt = (
         update(Asset)
-        .where(
-            Asset.status == AssetStatus.pending.value,
-            Asset.created_at < stale_threshold
-        )
+        .where(Asset.status == AssetStatus.pending.value, Asset.created_at < stale_threshold)
         .values(
             status=AssetStatus.failed.value,
             error_code=ErrorCode.INTERNAL_ERROR,

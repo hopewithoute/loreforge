@@ -87,7 +87,7 @@ async def _process_generation(
                 "seed": result.seed,
             },
         )
-        
+
         if not updated_asset:
             # We lost the database race! Another worker already successfully marked this asset.
             logger.info(f"Asset {asset_id} was already completed. Discarding output {final_path}.")

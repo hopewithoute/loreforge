@@ -99,9 +99,9 @@ def test_evolve_asset_success(client):
     # Now evolve it
     evolve_response = client.post(
         f"/api/assets/{parent_id}/evolve",
-        json={"prompt": "an evolved sword", "category": "prop", "style": "pixel_art"}
+        json={"prompt": "an evolved sword", "category": "prop", "style": "pixel_art"},
     )
-    
+
     assert evolve_response.status_code == 202
     evolve_data = evolve_response.json()
     assert evolve_data["id"] != parent_id
@@ -125,8 +125,8 @@ def test_evolve_asset_wrong_user(client):
     # Try to evolve it
     evolve_response = client.post(
         f"/api/assets/{parent_id}/evolve",
-        json={"prompt": "an evolved sword", "category": "prop", "style": "pixel_art"}
+        json={"prompt": "an evolved sword", "category": "prop", "style": "pixel_art"},
     )
-    
+
     assert evolve_response.status_code == 404
     assert evolve_response.json()["detail"] == "Parent asset not found"

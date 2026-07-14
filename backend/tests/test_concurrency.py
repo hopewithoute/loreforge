@@ -32,8 +32,6 @@ def test_sqlite_concurrency():
             },
         )
 
-
-
         @event.listens_for(engine, "connect")
         def set_sqlite_pragma(dbapi_connection, connection_record):
             cursor = dbapi_connection.cursor()
@@ -106,8 +104,6 @@ def test_same_asset_race_condition():
             f"sqlite:///{db_path}",
             connect_args={"check_same_thread": False, "timeout": 15},
         )
-
-
 
         @event.listens_for(engine, "connect")
         def set_sqlite_pragma(dbapi_connection, connection_record):
