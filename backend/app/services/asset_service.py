@@ -148,7 +148,8 @@ class AssetService:
 def reconcile_stale_assets(db: Session) -> int:
     """
     Reconcile stale pending assets that were interrupted by a server restart.
-    Marks them as failed so they don't stay pending forever.
+    Marks them as failed so they don't stay pending forever
+    Needed For worker that doesn't have durability across restarts.
     """
     import logging
 
@@ -165,10 +166,14 @@ def reconcile_stale_assets(db: Session) -> int:
             error_message="Generation interrupted by server restart.",
         )
     )
-    result = db.execute(stmt)
+    from typing import cast
+
+    from sqlalchemy import CursorResult
+
+    result = cast(CursorResult, db.execute(stmt))
     db.commit()
 
-    if result.rowcount > 0:  # type: ignore
-        logger.info(f"Reconciled {result.rowcount} stale pending assets to failed state.")  # type: ignore
-        
-    return result.rowcount  # type: ignore
+    if result.rowcount > 0:
+        logger.info(f"Reconciled {result.rowcount} stale pending assets to failed state.")
+
+    return result.rowcount
