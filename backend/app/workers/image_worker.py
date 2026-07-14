@@ -98,20 +98,7 @@ async def _process_generation(
 
     except ProviderError as e:
         logger.error(f"Provider error for asset {asset_id}: {e}")
-        # Map class name to canonical code (e.g. ProviderTimeoutError -> AI_TIMEOUT)
-        error_code = e.__class__.__name__.replace("Provider", "").replace("Error", "").upper()
-        if error_code == "TIMEOUT":
-            error_code = "AI_TIMEOUT"
-        elif error_code == "BROKENRESPONSE":
-            error_code = "BROKEN_RESPONSE"
-        elif error_code == "CONFIG":
-            error_code = "PROVIDER_CONFIG_ERROR"
-        elif error_code == "RATELIMIT":
-            error_code = "RATE_LIMITED"
-        elif error_code == "UNAVAILABLE":
-            error_code = "PROVIDER_UNAVAILABLE"
-
-        service.mark_as_failed(asset_id, user_id, error_code, str(e))
+        service.mark_as_failed(asset_id, user_id, e.code, str(e))
     except Exception as e:
         logger.exception(f"Unexpected error generating asset {asset_id}: {e}")
         service.mark_as_failed(

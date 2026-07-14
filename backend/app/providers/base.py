@@ -1,16 +1,15 @@
+from dataclasses import dataclass
 from typing import Protocol
 
 
+@dataclass(frozen=True, slots=True)
 class GeneratedImageResult:
     """Normalized payload returning from an AI provider."""
 
-    def __init__(
-        self, image_bytes: bytes, provider_name: str, provider_model: str, seed: int | None = None
-    ):
-        self.image_bytes = image_bytes
-        self.provider_name = provider_name
-        self.provider_model = provider_model
-        self.seed = seed
+    image_bytes: bytes
+    provider_name: str
+    provider_model: str
+    seed: int | None = None
 
 
 class AIProvider(Protocol):
