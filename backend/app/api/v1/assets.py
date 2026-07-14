@@ -1,4 +1,3 @@
-import asyncio
 from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Form, HTTPException, status
@@ -12,7 +11,7 @@ router = APIRouter(prefix="/api/assets", tags=["assets"])
 
 
 @router.post("/", status_code=status.HTTP_202_ACCEPTED)
-async def create_asset(
+def create_asset(
     background_tasks: BackgroundTasks,
     session_id: SessionDep,
     service: AssetServiceDep,
@@ -27,15 +26,13 @@ async def create_asset(
     reference_bytes = None
     reference_ext = None
     if form_data.reference_image:
-        reference_bytes, reference_ext = await validate_and_read_image(form_data.reference_image)
+        reference_bytes, reference_ext = validate_and_read_image(form_data.reference_image)
 
-    # Run the synchronous database and storage I/O in a threadpool to prevent blocking the async event loop
-    asset = await asyncio.to_thread(
-        service.create_asset,
-        session_id,  # user_id
-        data,
-        reference_bytes,
-        reference_ext,
+    asset = service.create_asset(
+        user_id=session_id,
+        data=data,
+        reference_bytes=reference_bytes,
+        reference_ext=reference_ext,
     )
 
     # Offload the AI generation and disk IO to the background worker

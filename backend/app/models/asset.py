@@ -49,12 +49,6 @@ class AssetCreateForm(BaseModel):
                 "Must provide either a prompt of at least 3 characters or a reference image."
             )
 
-        if self.reference_image:
-            # File contents will be processed asynchronously in the route handler
-            # using image_utils.validate_and_read_image to avoid OOM and properly validate bytes.
-            pass
-            # using image_utils.validate_and_read_image to avoid OOM and properly validate bytes.
-
         return self
 
 

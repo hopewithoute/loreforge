@@ -1,9 +1,25 @@
 import io
 
+from fastapi import UploadFile
 from PIL import Image
+from starlette.datastructures import Headers
 
 from app.core.config import settings
-from app.services.image_utils import prepare_provider_image
+from app.services.image_utils import prepare_provider_image, validate_and_read_image
+
+
+def make_upload(image_format: str, declared_content_type: str) -> tuple[UploadFile, bytes]:
+    image = Image.new("RGB", (32, 24), color="green")
+    image_buffer = io.BytesIO()
+    image.save(image_buffer, format=image_format)
+    image_bytes = image_buffer.getvalue()
+
+    upload = UploadFile(
+        file=io.BytesIO(image_bytes),
+        filename="reference.bin",
+        headers=Headers({"content-type": declared_content_type}),
+    )
+    return upload, image_bytes
 
 
 def test_prepare_provider_image_resizes_large_images():
@@ -37,3 +53,21 @@ def test_prepare_provider_image_keeps_small_images_same_size():
 
     assert result_img.size == (300, 200)
     assert result_img.format == "PNG"
+
+
+def test_validate_and_read_image_derives_png_extension_from_bytes():
+    upload, image_bytes = make_upload("PNG", "application/octet-stream")
+
+    result_bytes, extension = validate_and_read_image(upload)
+
+    assert result_bytes == image_bytes
+    assert extension == ".png"
+
+
+def test_validate_and_read_image_derives_jpeg_extension_from_bytes():
+    upload, image_bytes = make_upload("JPEG", "image/png")
+
+    result_bytes, extension = validate_and_read_image(upload)
+
+    assert result_bytes == image_bytes
+    assert extension == ".jpg"

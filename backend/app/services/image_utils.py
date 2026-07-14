@@ -1,6 +1,6 @@
 import io
 
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
 from PIL import Image
 
 from app.core.config import settings
@@ -26,7 +26,7 @@ def prepare_provider_image(image_bytes: bytes) -> bytes:
         return output.getvalue()
 
 
-async def validate_and_read_image(file) -> tuple[bytes, str]:
+def validate_and_read_image(file: UploadFile) -> tuple[bytes, str]:
     """
     Safely reads an uploaded file in chunks up to a maximum size limit.
     Verifies the bytes form a valid PNG or JPEG image and returns the bytes and extension.
@@ -40,7 +40,7 @@ async def validate_and_read_image(file) -> tuple[bytes, str]:
     buffer = bytearray()
 
     while True:
-        chunk = await file.read(chunk_size)
+        chunk = file.file.read(chunk_size)
         if not chunk:
             break
         bytes_read += len(chunk)
