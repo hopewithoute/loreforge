@@ -13,18 +13,49 @@ class AssetService:
         stmt = select(Asset).where(Asset.id == asset_id, Asset.user_id == user_id)
         return self._db.scalars(stmt).first()
 
-    def create_asset(self, user_id: str, data: AssetCreate) -> AssetRead:
+    def create_asset(
+        self,
+        user_id: str,
+        data: AssetCreate,
+        reference_bytes: bytes | None = None,
+        reference_ext: str | None = None,
+    ) -> AssetRead:
+        import uuid
+
+        from app.services.image_utils import prepare_provider_image
+        from app.storage.local_storage import LocalStorageDriver
+
+        asset_id = str(uuid.uuid4())
         asset = Asset(
+            id=asset_id,
             user_id=user_id,
             prompt=data.prompt,
             category=data.category.value,
             style=data.style.value,
             parent_id=data.parent_id,
         )
-        self._db.add(asset)
-        self._db.commit()
-        self._db.refresh(asset)
-        return AssetRead.model_validate(asset)
+
+        storage = LocalStorageDriver()
+
+        try:
+            if reference_bytes and reference_ext:
+                # Save original
+                original_path = storage.save(asset_id, f"original{reference_ext}", reference_bytes)
+                asset.reference_image_path = original_path
+
+                # Prepare and save provider copy
+                prepared_bytes = prepare_provider_image(reference_bytes)
+                prepared_path = storage.save(asset_id, "prepared.png", prepared_bytes)
+                asset.prepared_input_path = prepared_path
+
+            self._db.add(asset)
+            self._db.commit()
+            self._db.refresh(asset)
+            return AssetRead.model_validate(asset)
+        except Exception as e:
+            self._db.rollback()
+            storage.delete_directory(asset_id)
+            raise e
 
     def get_asset(self, asset_id: str, user_id: str) -> AssetRead | None:
         asset = self._get_asset_orm(asset_id, user_id)
