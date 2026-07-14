@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.db.schema import Asset
@@ -75,18 +75,25 @@ class AssetService:
         return [AssetRead.model_validate(a) for a in self._db.scalars(stmt)]
 
     def update_status(self, asset_id: str, user_id: str, status: str, **kwargs) -> AssetRead | None:
-        asset = self._get_asset_orm(asset_id, user_id)
-
-        if not asset or asset.status != AssetStatus.pending.value:
-            return AssetRead.model_validate(asset) if asset else None
-
-        asset.status = status
-        for key, value in kwargs.items():
-            setattr(asset, key, value)
-
+        # Atomic update based on status == pending
+        stmt = (
+            update(Asset)
+            .where(
+                Asset.id == asset_id,
+                Asset.user_id == user_id,
+                Asset.status == AssetStatus.pending.value,
+            )
+            .values(status=status, **kwargs)
+        )
+        result = self._db.execute(stmt)
         self._db.commit()
-        self._db.refresh(asset)
-        return AssetRead.model_validate(asset)
+
+        # If result.rowcount == 0, it wasn't pending (or wasn't found)
+        # Fetch the current state to return it
+        asset = self._get_asset_orm(asset_id, user_id)
+        if asset:
+            return AssetRead.model_validate(asset)
+        return None
 
     def mark_as_success(
         self,
