@@ -7,7 +7,7 @@ import httpx
 from PIL import Image
 from pydantic import BaseModel, ValidationError
 
-from app.core.config import settings
+from app.core.config import Settings, settings
 from app.core.constants import MimeType
 from app.core.errors import (
     ProviderBrokenResponseError,
@@ -32,17 +32,22 @@ class CloudflareResponse(BaseModel):
 class CloudflareFluxAdapter(AIProvider):
     SUPPORTED_FORMATS = ("PNG", "JPEG")
 
-    def __init__(self):
-        self.account_id = settings.cloudflare_account_id
-        self.api_token = settings.cloudflare_api_token
-        self.model = settings.cloudflare_model
-        self.timeout = settings.ai_timeout_seconds
+    def __init__(self, config: Settings | None = None):
+        runtime = config or settings
+        self.account_id = runtime.cloudflare_account_id
+        self.api_token = runtime.cloudflare_api_token
+        self.model = runtime.cloudflare_model
+        self.timeout = runtime.ai_timeout_seconds
+        self.width = runtime.ai_image_width
+        self.height = runtime.ai_image_height
+        self.force_timeout = runtime.force_ai_timeout
+        self.force_broken_response = runtime.force_broken_provider_response
 
     async def generate(
         self,
         prompt: str,
-        width: int = 1024,
-        height: int = 1024,
+        width: int | None = None,
+        height: int | None = None,
         reference_image_bytes: bytes | None = None,
     ) -> GeneratedImageResult:
 
@@ -59,8 +64,8 @@ class CloudflareFluxAdapter(AIProvider):
 
         data = {
             "prompt": prompt,
-            "width": str(width),
-            "height": str(height),
+            "width": str(width or self.width),
+            "height": str(height or self.height),
         }
 
         files = None
@@ -73,12 +78,12 @@ class CloudflareFluxAdapter(AIProvider):
         logger.info(f"Dispatching to Cloudflare AI [{self.model}] with timeout {self.timeout}s.")
         # DO NOT log headers to prevent leaking tokens
 
-        if settings.force_ai_timeout:
+        if self.force_timeout:
             logger.warning("Simulating AI Timeout due to FORCE_AI_TIMEOUT=true")
             await asyncio.sleep(self.timeout + 1)
             raise ProviderTimeoutError("Controlled timeout triggered by debug switch.")
 
-        if settings.force_broken_provider_response:
+        if self.force_broken_response:
             logger.warning("Simulating Broken Response due to FORCE_BROKEN_PROVIDER_RESPONSE=true")
             raise ProviderBrokenResponseError(
                 "Controlled broken response triggered by debug switch."

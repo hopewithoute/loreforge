@@ -1,5 +1,6 @@
 import base64
 import io
+from urllib.parse import parse_qs
 
 import httpx
 import pytest
@@ -33,6 +34,8 @@ def adapter(monkeypatch):
     monkeypatch.setattr(settings, "cloudflare_account_id", "test_acc")
     monkeypatch.setattr(settings, "cloudflare_api_token", "test_tok")
     monkeypatch.setattr(settings, "cloudflare_model", "test_mod")
+    monkeypatch.setattr(settings, "ai_image_width", 640)
+    monkeypatch.setattr(settings, "ai_image_height", 768)
     return CloudflareFluxAdapter()
 
 
@@ -52,6 +55,9 @@ async def test_generate_success(adapter, monkeypatch):
     b64 = create_valid_png_base64()
 
     def handler(req):
+        request_data = parse_qs(req.content.decode())
+        assert request_data["width"] == ["640"]
+        assert request_data["height"] == ["768"]
         return httpx.Response(200, json={"result": {"image": b64}}, request=req)
 
     def mock_client(*args, **kwargs):

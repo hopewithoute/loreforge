@@ -3,24 +3,11 @@ from typing import Annotated
 
 import fsspec
 from fastapi import Cookie, Depends, Response
-from fsspec.implementations.dirfs import DirFileSystem
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
+from app.bootstrap import get_storage_driver
 from app.db.database import get_db
-from app.providers.base import AIProvider
-from app.providers.cloudflare_flux import CloudflareFluxAdapter
 from app.services.asset_service import AssetService
-
-
-def get_storage_driver() -> fsspec.AbstractFileSystem:
-    local_fs = fsspec.filesystem("file", auto_mkdir=True)
-    return DirFileSystem(path=str(settings.media_root), fs=local_fs)
-
-
-def get_ai_provider() -> AIProvider:
-    return CloudflareFluxAdapter()
-
 
 DbDep = Annotated[Session, Depends(get_db)]
 StorageDep = Annotated[fsspec.AbstractFileSystem, Depends(get_storage_driver)]

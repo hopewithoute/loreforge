@@ -19,8 +19,8 @@ class AIProvider(Protocol):
     async def generate(
         self,
         prompt: str,
-        width: int = 1024,
-        height: int = 1024,
+        width: int | None = None,
+        height: int | None = None,
         reference_image_bytes: bytes | None = None,
     ) -> GeneratedImageResult:
         """

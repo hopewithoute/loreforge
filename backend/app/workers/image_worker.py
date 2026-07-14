@@ -6,7 +6,7 @@ from typing import cast
 
 import fsspec
 
-from app.api.deps import get_ai_provider, get_storage_driver
+from app.bootstrap import get_ai_provider, get_storage_driver
 from app.core.constants import ErrorCode
 from app.core.errors import ProviderError
 from app.db.database import SessionLocal
