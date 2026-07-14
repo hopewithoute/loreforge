@@ -32,7 +32,11 @@ def create_app() -> FastAPI:
 
     # Ensure media root exists and mount it
     settings.media_root.mkdir(parents=True, exist_ok=True)
-    application.mount("/media", StaticFiles(directory=str(settings.media_root)), name="media")
+    application.mount(
+        settings.media_url,
+        StaticFiles(directory=str(settings.media_root)),
+        name="media",
+    )
 
     # We only mount frontend if the directory exists to avoid errors in pure backend dev
     if settings.frontend_dist.exists():

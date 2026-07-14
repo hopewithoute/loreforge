@@ -1,6 +1,11 @@
 from pathlib import Path
 
-from app.core.config import Settings
+from app.core.config import BACKEND_ROOT, ENV_FILES, REPO_ROOT, Settings
+
+
+def test_default_env_files_cover_repo_and_backend_roots() -> None:
+    assert ENV_FILES == (REPO_ROOT / ".env", BACKEND_ROOT / ".env")
+    assert BACKEND_ROOT == REPO_ROOT / "backend"
 
 
 def test_settings_loads_values_from_dotenv_file(tmp_path: Path) -> None:

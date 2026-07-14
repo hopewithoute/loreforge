@@ -4,8 +4,9 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-ENV_FILES = (PROJECT_ROOT / ".env", PROJECT_ROOT / "backend" / ".env")
+BACKEND_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = BACKEND_ROOT.parent
+ENV_FILES = (REPO_ROOT / ".env", BACKEND_ROOT / ".env")
 
 
 class Settings(BaseSettings):
