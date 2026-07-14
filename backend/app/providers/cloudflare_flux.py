@@ -29,6 +29,8 @@ class CloudflareResponse(BaseModel):
 
 
 class CloudflareFluxAdapter(AIProvider):
+    SUPPORTED_FORMATS = ("PNG", "JPEG")
+
     def __init__(self):
         self.account_id = settings.cloudflare_account_id
         self.api_token = settings.cloudflare_api_token
@@ -109,7 +111,7 @@ class CloudflareFluxAdapter(AIProvider):
             try:
                 img = Image.open(io.BytesIO(image_bytes))
                 img.verify()
-                if img.format not in ("PNG", "JPEG"):
+                if img.format not in self.SUPPORTED_FORMATS:
                     raise ProviderBrokenResponseError(f"Cloudflare returned unsupported format: {img.format}")
             except ProviderBrokenResponseError:
                 raise
