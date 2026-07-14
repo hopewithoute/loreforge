@@ -13,6 +13,9 @@ from app.db.schema import Asset
 from app.models.asset import AssetCreate, AssetEvolve, AssetRead, AssetStatus
 from app.services.image_utils import prepare_provider_image
 
+logger = logging.getLogger(__name__)
+STALE_ASSET_THRESHOLD = timedelta(minutes=5)
+
 
 class AssetService:
     def __init__(self, session: Session, storage: fsspec.AbstractFileSystem):
@@ -62,14 +65,14 @@ class AssetService:
             self._db.refresh(asset)
             return AssetRead.model_validate(asset)
 
-        except Exception as e:
+        except Exception:
             # Step 3: Rollback & Cleanup on failure
             # If the database fails (e.g. SQLite locked), we must sweep any newly
             # created images to prevent digital garbage/orphan files on disk.
             self._db.rollback()
             with contextlib.suppress(FileNotFoundError):
                 self._storage.rm(f"assets/{asset_id}", recursive=True)
-            raise e
+            raise
 
     def get_asset(self, asset_id: str, user_id: str) -> AssetRead | None:
         asset = self._get_asset_orm(asset_id, user_id)
@@ -95,15 +98,21 @@ class AssetService:
             self._db.commit()
             self._db.refresh(asset)
             return AssetRead.model_validate(asset)
-        except Exception as e:
+        except Exception:
             self._db.rollback()
-            raise e
+            raise
 
     def list_assets(self, user_id: str) -> list[AssetRead]:
         stmt = select(Asset).where(Asset.user_id == user_id).order_by(Asset.created_at.desc())
         return [AssetRead.model_validate(a) for a in self._db.scalars(stmt)]
 
-    def update_status(self, asset_id: str, user_id: str, status: str, **kwargs) -> AssetRead | None:
+    def _transition_pending(
+        self,
+        asset_id: str,
+        user_id: str,
+        status: AssetStatus,
+        values: dict[str, object],
+    ) -> AssetRead | None:
         # Atomic update based on status == pending
         stmt = (
             update(Asset)
@@ -112,7 +121,7 @@ class AssetService:
                 Asset.user_id == user_id,
                 Asset.status == AssetStatus.pending.value,
             )
-            .values(status=status, **kwargs)
+            .values(status=status.value, **values)
         )
 
         result = cast(CursorResult, self._db.execute(stmt))
@@ -132,25 +141,33 @@ class AssetService:
         asset_id: str,
         user_id: str,
         generated_image_path: str,
-        provider_info: dict,
+        provider_name: str,
+        provider_model: str,
+        seed: int | None,
     ) -> AssetRead | None:
-        return self.update_status(
+        return self._transition_pending(
             asset_id,
             user_id,
-            status=AssetStatus.success.value,
-            generated_image_path=generated_image_path,
-            **provider_info,
+            status=AssetStatus.success,
+            values={
+                "generated_image_path": generated_image_path,
+                "provider_name": provider_name,
+                "provider_model": provider_model,
+                "seed": seed,
+            },
         )
 
     def mark_as_failed(
         self, asset_id: str, user_id: str, error_code: str, error_message: str
     ) -> AssetRead | None:
-        return self.update_status(
+        return self._transition_pending(
             asset_id,
             user_id,
-            status=AssetStatus.failed.value,
-            error_code=error_code,
-            error_message=error_message,
+            status=AssetStatus.failed,
+            values={
+                "error_code": error_code,
+                "error_message": error_message,
+            },
         )
 
 
@@ -160,9 +177,7 @@ def reconcile_stale_assets(db: Session) -> int:
     Marks them as failed so they don't stay pending forever.
     Only targets assets older than 5 minutes.
     """
-    logger = logging.getLogger(__name__)
-
-    stale_threshold = datetime.now(UTC) - timedelta(minutes=5)
+    stale_threshold = datetime.now(UTC) - STALE_ASSET_THRESHOLD
 
     stmt = (
         update(Asset)

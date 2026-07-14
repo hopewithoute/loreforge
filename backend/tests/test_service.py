@@ -98,7 +98,9 @@ def test_asset_service_status_updates(db_session: Session):
         asset.id,
         "user-456",
         "mock/gen.png",
-        {"provider_name": "cloudflare", "provider_model": "flux", "seed": 42},
+        provider_name="cloudflare",
+        provider_model="flux",
+        seed=42,
     )
 
     assert success_asset is not None

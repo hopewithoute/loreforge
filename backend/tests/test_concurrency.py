@@ -144,7 +144,9 @@ def test_same_asset_race_condition():
                     asset1_id,
                     "user1",
                     "/test/path.png",
-                    {"provider_name": "test"},
+                    "test",
+                    "test-model",
+                    None,
                 )
 
             async def worker2():

@@ -81,11 +81,9 @@ async def _process_generation(
             asset_id=asset_id,
             user_id=user_id,
             generated_image_path=final_path,
-            provider_info={
-                "provider_name": result.provider_name,
-                "provider_model": result.provider_model,
-                "seed": result.seed,
-            },
+            provider_name=result.provider_name,
+            provider_model=result.provider_model,
+            seed=result.seed,
         )
 
         if not updated_asset:
