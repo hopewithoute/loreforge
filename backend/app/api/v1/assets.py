@@ -1,11 +1,8 @@
 from typing import Annotated
-
 from fastapi import APIRouter, BackgroundTasks, Form, HTTPException, status
 
 from app.api.deps import AssetServiceDep, SessionDep
 from app.models.asset import AssetCreate, AssetRead, AssetCreateForm
-from app.core.constants import MimeType, Extension
-from app.core.config import settings
 from app.workers.image_worker import generate_image_task
 
 router = APIRouter(prefix="/api/assets", tags=["assets"])
@@ -18,21 +15,6 @@ def create_asset(
     service: AssetServiceDep,
     form_data: Annotated[AssetCreateForm, Form()],
 ) -> AssetRead:
-    reference_bytes = None
-    reference_ext = None
-    
-    if form_data.reference_image:
-        reference_bytes = form_data.reference_image.file.read()
-        max_bytes = settings.max_upload_mb * 1024 * 1024
-        
-        if len(reference_bytes) > max_bytes:
-            raise HTTPException(
-                status_code=status.HTTP_413_CONTENT_TOO_LARGE,
-                detail="File size exceeds the maximum limit.",
-            )
-            
-        reference_ext = Extension.PNG if form_data.reference_image.content_type == MimeType.PNG else Extension.JPEG
-
     data = AssetCreate(
         prompt=form_data.prompt, 
         category=form_data.category, 
@@ -43,8 +25,8 @@ def create_asset(
     asset = service.create_asset(
         user_id=session_id,
         data=data,
-        reference_bytes=reference_bytes,
-        reference_ext=reference_ext,
+        reference_bytes=form_data.reference_bytes,
+        reference_ext=form_data.reference_ext,
     )
 
     # Offload the AI generation and disk IO to the background worker
