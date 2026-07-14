@@ -108,11 +108,11 @@ class AssetService:
             )
             .values(status=status, **kwargs)
         )
-        result = self._db.execute(stmt)
+        self._db.execute(stmt)
         self._db.commit()
 
-        # If result.rowcount == 0, it wasn't pending (or wasn't found)
-        # Fetch the current state to return it
+        # Whether the update succeeded (rowcount=1) or failed due to race condition (rowcount=0),
+        # we fetch and return the current true state of the database.
         asset = self._get_asset_orm(asset_id, user_id)
         if asset:
             return AssetRead.model_validate(asset)
