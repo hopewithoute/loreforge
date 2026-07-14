@@ -32,7 +32,7 @@ class AssetCreateForm(BaseModel):
 
     category: AssetCategory
     style: AssetStyle
-    prompt: str = Field(min_length=3)
+    prompt: str = ""
     reference_image: UploadFile | None = None
 
     reference_bytes: bytes | None = None
@@ -42,28 +42,28 @@ class AssetCreateForm(BaseModel):
 
     @model_validator(mode="after")
     def validate_form(self):
-        if self.reference_image:
-            if self.reference_image.content_type not in (MimeType.JPEG, MimeType.PNG):
-                raise ValueError("Invalid file type. Only JPEG and PNG are supported.")
+        stripped_prompt = self.prompt.strip() if self.prompt else ""
+        
+        if self.prompt and len(stripped_prompt) < 3:
+            raise ValueError("Prompt must be at least 3 characters if provided.")
+            
+        if not stripped_prompt and not self.reference_image:
+            raise ValueError("Must provide either a prompt of at least 3 characters or a reference image.")
 
+        if self.reference_image:
             self.reference_ext = (
                 Extension.PNG
                 if self.reference_image.content_type == MimeType.PNG
                 else Extension.JPEG
             )
-
-            file_bytes = self.reference_image.file.read()
-            max_bytes = settings.max_upload_mb * 1024 * 1024
-            if len(file_bytes) > max_bytes:
-                raise ValueError("File size exceeds the maximum limit.")
-
-            self.reference_bytes = file_bytes
+            # File contents will be processed asynchronously in the route handler
+            # using image_utils.validate_and_read_image to avoid OOM and properly validate bytes.
 
         return self
 
 
 class AssetCreate(BaseModel):
-    prompt: str = Field(min_length=3)
+    prompt: str = ""
     category: AssetCategory
     style: AssetStyle
 
