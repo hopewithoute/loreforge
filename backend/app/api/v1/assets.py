@@ -1,8 +1,9 @@
 from typing import Annotated
+
 from fastapi import APIRouter, BackgroundTasks, Form, HTTPException, status
 
 from app.api.deps import AssetServiceDep, SessionDep
-from app.models.asset import AssetCreate, AssetRead, AssetCreateForm
+from app.models.asset import AssetCreate, AssetCreateForm, AssetRead
 from app.workers.image_worker import generate_image_task
 
 router = APIRouter(prefix="/api/assets", tags=["assets"])
@@ -16,10 +17,10 @@ def create_asset(
     form_data: Annotated[AssetCreateForm, Form()],
 ) -> AssetRead:
     data = AssetCreate(
-        prompt=form_data.prompt, 
-        category=form_data.category, 
-        style=form_data.style, 
-        parent_id=form_data.parent_id
+        prompt=form_data.prompt,
+        category=form_data.category,
+        style=form_data.style,
+        parent_id=form_data.parent_id,
     )
 
     asset = service.create_asset(

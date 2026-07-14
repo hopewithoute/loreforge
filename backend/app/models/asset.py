@@ -1,10 +1,11 @@
 from datetime import datetime
 from enum import StrEnum
-from fastapi import UploadFile
-from app.core.constants import MimeType, Extension
-from app.core.config import settings
 
-from pydantic import BaseModel, Field, model_validator
+from fastapi import UploadFile
+from pydantic import BaseModel, model_validator
+
+from app.core.config import settings
+from app.core.constants import Extension, MimeType
 
 
 class AssetCategory(StrEnum):
@@ -28,12 +29,13 @@ class AssetStatus(StrEnum):
 
 class AssetCreateForm(BaseModel):
     """Centralized Pydantic model for validating the multipart/form-data request shape and rules"""
+
     category: AssetCategory
     style: AssetStyle
     prompt: str = ""
     parent_id: str | None = None
     reference_image: UploadFile | None = None
-    
+
     reference_bytes: bytes | None = None
     reference_ext: str | None = None
 
@@ -43,20 +45,24 @@ class AssetCreateForm(BaseModel):
     def validate_form(self):
         if not self.prompt and not self.reference_image:
             raise ValueError("Must provide either a prompt or a reference image")
-            
+
         if self.reference_image:
             if self.reference_image.content_type not in (MimeType.JPEG, MimeType.PNG):
                 raise ValueError("Invalid file type. Only JPEG and PNG are supported.")
-            
-            self.reference_ext = Extension.PNG if self.reference_image.content_type == MimeType.PNG else Extension.JPEG
-            
+
+            self.reference_ext = (
+                Extension.PNG
+                if self.reference_image.content_type == MimeType.PNG
+                else Extension.JPEG
+            )
+
             file_bytes = self.reference_image.file.read()
             max_bytes = settings.max_upload_mb * 1024 * 1024
             if len(file_bytes) > max_bytes:
                 raise ValueError("File size exceeds the maximum limit.")
-                
+
             self.reference_bytes = file_bytes
-                
+
         return self
 
 

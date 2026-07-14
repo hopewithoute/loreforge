@@ -1,10 +1,9 @@
 import uuid
 from typing import Annotated
 
-from fastapi import Cookie, Depends, HTTPException, Response, status
+from fastapi import Cookie, Depends, Response
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.db.database import get_db
 from app.providers.base import AIProvider
 from app.providers.cloudflare_flux import CloudflareFluxAdapter
@@ -30,9 +29,6 @@ def get_asset_service(db: DbDep, storage: StorageDep) -> AssetService:
 
 
 AssetServiceDep = Annotated[AssetService, Depends(get_asset_service)]
-
-
-
 
 
 def get_session_id(

@@ -14,7 +14,6 @@ from app.storage.base import StorageDriver
 logger = logging.getLogger(__name__)
 
 
-
 def generate_image_task(asset_id: str, user_id: str) -> None:
     """
     FastAPI BackgroundTask entrypoint.
@@ -30,6 +29,7 @@ def generate_image_task(asset_id: str, user_id: str) -> None:
     with SessionLocal() as db:
         service = AssetService(db, storage)
         asyncio.run(_process_generation(asset_id, user_id, service, storage, provider))
+
 
 async def _process_generation(
     asset_id: str,
