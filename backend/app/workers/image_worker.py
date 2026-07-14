@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from app.api.deps import get_ai_provider, get_storage_driver
@@ -84,10 +85,12 @@ async def _process_generation(
         service.mark_as_failed(asset_id, user_id, "INTERNAL_ERROR", "An unexpected error occurred.")
 
 
-async def generate_image_task(asset_id: str, user_id: str) -> None:
+def generate_image_task(asset_id: str, user_id: str) -> None:
     """
     FastAPI BackgroundTask entrypoint.
     Creates concrete dependencies and starts a fresh DB session.
+    Because this is a synchronous function, FastAPI runs it in a threadpool,
+    preventing DB/Storage synchronous I/O from blocking the main event loop.
     """
     # Create concrete instances using central factories to prevent drift
     storage = get_storage_driver()
@@ -96,4 +99,4 @@ async def generate_image_task(asset_id: str, user_id: str) -> None:
     # Open isolated DB session
     with SessionLocal() as db:
         service = AssetService(db, storage)
-        await _process_generation(asset_id, user_id, service, storage, provider)
+        asyncio.run(_process_generation(asset_id, user_id, service, storage, provider))
