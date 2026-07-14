@@ -33,7 +33,6 @@ class AssetCreateForm(BaseModel):
     category: AssetCategory
     style: AssetStyle
     prompt: str = ""
-    parent_id: str | None = None
     reference_image: UploadFile | None = None
 
     reference_bytes: bytes | None = None
@@ -70,7 +69,12 @@ class AssetCreate(BaseModel):
     prompt: str = ""
     category: AssetCategory
     style: AssetStyle
-    parent_id: str | None = None
+
+
+class AssetEvolve(BaseModel):
+    prompt: str = ""
+    category: AssetCategory
+    style: AssetStyle
 
 
 class AssetRead(BaseModel):

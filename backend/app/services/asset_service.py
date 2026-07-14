@@ -4,7 +4,7 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.db.schema import Asset
-from app.models.asset import AssetCreate, AssetRead, AssetStatus
+from app.models.asset import AssetCreate, AssetEvolve, AssetRead, AssetStatus
 from app.services.image_utils import prepare_provider_image
 from app.storage.base import StorageDriver
 
@@ -34,7 +34,6 @@ class AssetService:
             prompt=data.prompt,
             category=data.category.value,
             style=data.style.value,
-            parent_id=data.parent_id,
         )
 
         try:
@@ -69,6 +68,30 @@ class AssetService:
     def get_asset(self, asset_id: str, user_id: str) -> AssetRead | None:
         asset = self._get_asset_orm(asset_id, user_id)
         return AssetRead.model_validate(asset) if asset else None
+
+    def evolve_asset(self, parent_id: str, user_id: str, data: AssetEvolve) -> AssetRead:
+        parent = self._get_asset_orm(parent_id, user_id)
+        if not parent:
+            raise ValueError("Parent asset not found")
+
+        asset_id = str(uuid.uuid4())
+        asset = Asset(
+            id=asset_id,
+            user_id=user_id,
+            prompt=data.prompt,
+            category=data.category.value,
+            style=data.style.value,
+            parent_id=parent_id,
+        )
+
+        try:
+            self._db.add(asset)
+            self._db.commit()
+            self._db.refresh(asset)
+            return AssetRead.model_validate(asset)
+        except Exception as e:
+            self._db.rollback()
+            raise e
 
     def list_assets(self, user_id: str) -> list[AssetRead]:
         stmt = select(Asset).where(Asset.user_id == user_id).order_by(Asset.created_at.desc())
