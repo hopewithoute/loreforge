@@ -9,8 +9,10 @@ from app.workers.image_worker import generate_image_task
 router = APIRouter(prefix="/api/assets", tags=["assets"])
 
 
+from app.services.image_utils import validate_and_read_image
+
 @router.post("/", status_code=status.HTTP_202_ACCEPTED)
-def create_asset(
+async def create_asset(
     background_tasks: BackgroundTasks,
     session_id: SessionDep,
     service: AssetServiceDep,
@@ -22,10 +24,14 @@ def create_asset(
         style=form_data.style,
     )
 
+    reference_bytes = None
+    if form_data.reference_image:
+        reference_bytes = await validate_and_read_image(form_data.reference_image)
+
     asset = service.create_asset(
         user_id=session_id,
         data=data,
-        reference_bytes=form_data.reference_bytes,
+        reference_bytes=reference_bytes,
         reference_ext=form_data.reference_ext,
     )
 
