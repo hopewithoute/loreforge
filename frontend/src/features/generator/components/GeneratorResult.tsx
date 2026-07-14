@@ -9,12 +9,12 @@ interface GeneratorResultProps {
 
 export function GeneratorResult({ asset, isPending }: GeneratorResultProps) {
   return (
-    <div className="w-full h-full min-h-[400px] flex flex-col border border-ink-3/20 rounded-2xl bg-paper-2/40 backdrop-blur-sm overflow-hidden relative">
+    <div className="w-full h-full min-h-100 flex flex-col border border-ink-3/20 rounded-2xl bg-paper-2/40 backdrop-blur-sm overflow-hidden relative">
       <AnimatePresence mode="wait">
-        
+
         {/* State 1: Loading */}
         {isPending && (
-          <motion.div 
+          <motion.div
             key="loading"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -27,7 +27,7 @@ export function GeneratorResult({ asset, isPending }: GeneratorResultProps) {
 
         {/* State 2: Error */}
         {asset?.status === 'failed' && !isPending && (
-          <motion.div 
+          <motion.div
             key="error"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -45,16 +45,16 @@ export function GeneratorResult({ asset, isPending }: GeneratorResultProps) {
 
         {/* State 3: Success Image */}
         {asset?.status === 'success' && asset.generated_image_path && !isPending && (
-          <motion.div 
+          <motion.div
             key="success"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
             className="absolute inset-0 p-4 flex items-center justify-center"
           >
-            <img 
-              src={asset.generated_image_path} 
-              alt={asset.prompt} 
+            <img
+              src={asset.generated_image_path}
+              alt={asset.prompt}
               className="w-full h-full object-contain rounded-lg shadow-2xl"
             />
           </motion.div>
@@ -62,7 +62,7 @@ export function GeneratorResult({ asset, isPending }: GeneratorResultProps) {
 
         {/* State 4: Idle */}
         {!asset && !isPending && (
-          <motion.div 
+          <motion.div
             key="idle"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

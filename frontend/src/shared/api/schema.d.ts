@@ -117,10 +117,13 @@ export interface components {
         AssetStyle: "concept_art" | "isometric_rpg" | "pixel_art" | "dark_fantasy";
         /** Body_create_asset_api_assets__post */
         Body_create_asset_api_assets__post: {
-            /** Prompt */
-            prompt: string;
             category: components["schemas"]["AssetCategory"];
             style: components["schemas"]["AssetStyle"];
+            /**
+             * Prompt
+             * @default
+             */
+            prompt: string;
             /** Parent Id */
             parent_id?: string | null;
             /** Reference Image */

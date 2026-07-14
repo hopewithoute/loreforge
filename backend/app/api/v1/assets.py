@@ -14,10 +14,10 @@ def create_asset(
     background_tasks: BackgroundTasks,
     session_id: SessionDep,
     service: AssetServiceDep,
-    prompt: Annotated[str, Form()] = "",
     category: Annotated[AssetCategory, Form()],
     style: Annotated[AssetStyle, Form()],
     image_data: ValidImageDep,
+    prompt: Annotated[str, Form()] = "",
     parent_id: Annotated[str | None, Form()] = None,
 ) -> AssetRead:
     reference_bytes, reference_ext = image_data

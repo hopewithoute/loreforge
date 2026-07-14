@@ -6,14 +6,14 @@ import { useAssetStatus } from '../api/useAssetStatus';
 
 export function GeneratorPanel() {
   const [activeAssetId, setActiveAssetId] = useState<string | null>(null);
-  
+
   const createAsset = useCreateAsset();
   const { data: asset } = useAssetStatus(activeAssetId);
 
   const handleSubmit = (formData: FormData) => {
     // Optimistically reset active asset so the loading state begins immediately
     setActiveAssetId(null);
-    
+
     createAsset.mutate(formData, {
       onSuccess: (data) => {
         setActiveAssetId(data.id);
@@ -33,17 +33,17 @@ export function GeneratorPanel() {
       <div className="bg-paper-2/80 backdrop-blur-xl rounded-2xl p-6 border border-ink-3/20 shadow-2xl mb-6">
         <h2 className="font-serif text-2xl mb-2 text-ink">Generator</h2>
         <p className="text-ink-2 text-sm mb-6">Set your parameters and forge a new concept.</p>
-        
-        <GeneratorForm 
-          onSubmit={handleSubmit} 
-          isPending={isPending} 
+
+        <GeneratorForm
+          onSubmit={handleSubmit}
+          isPending={isPending}
         />
       </div>
 
-      <div className="flex-grow">
-        <GeneratorResult 
-          asset={asset} 
-          isPending={isPending} 
+      <div className="grow">
+        <GeneratorResult
+          asset={asset}
+          isPending={isPending}
         />
       </div>
     </div>
