@@ -17,7 +17,7 @@ def create_asset(
     category: Annotated[AssetCategory, Form()],
     style: Annotated[AssetStyle, Form()],
     parent_id: Annotated[str | None, Form()] = None,
-    reference_image: UploadFile | None = File(default=None),
+    reference_image: Annotated[UploadFile | None, File()] = None,
 ) -> AssetRead:
     data = AssetCreate(prompt=prompt, category=category, style=style, parent_id=parent_id)
 
