@@ -4,13 +4,15 @@
 export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = endpoint.startsWith("/api") ? endpoint : `/api${endpoint}`;
 
+  const headers = new Headers(options.headers);
+  if (!(options.body instanceof FormData) && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
   const response = await fetch(url, {
     ...options,
     credentials: "include", // Crucial for server-owned session cookies
-    headers: {
-      ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
-      ...options.headers,
-    },
+    headers,
   });
 
   if (!response.ok) {

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { GeneratorPanel } from "./features/generator/components/GeneratorPanel";
 
 // The shared background for the splash screen (Spotlight Flashlight + Grain + Grid)
 const SplashBackground = ({ mousePos }: { mousePos: { x: string, y: string } }) => (
@@ -107,23 +108,13 @@ export function App() {
         style={{ pointerEvents: isEntered ? "auto" : "none" }}
       >
         <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 flex-grow">
-          {/* Generator Form Column */}
-          <div className="lg:col-span-4 flex flex-col gap-6">
-            <div className="bg-paper-2/80 backdrop-blur-xl rounded-2xl p-6 border border-ink-3/20 shadow-2xl">
-              <h2 className="font-serif text-2xl mb-2 text-ink">Generator</h2>
-              <p className="text-ink-2 text-sm mb-8">Set your parameters and forge a new concept.</p>
-              
-              <div className="space-y-4">
-                <div className="h-12 bg-paper rounded-lg animate-pulse opacity-50" />
-                <div className="h-12 bg-paper rounded-lg animate-pulse opacity-50" />
-                <div className="h-32 bg-paper rounded-lg animate-pulse opacity-50" />
-                <div className="h-12 bg-accent/20 border border-accent/30 rounded-lg animate-pulse mt-4" />
-              </div>
-            </div>
+          {/* Generator Form & Result Column */}
+          <div className="lg:col-span-5">
+            <GeneratorPanel />
           </div>
 
           {/* Gallery Column */}
-          <div className="lg:col-span-8 flex flex-col gap-6">
+          <div className="lg:col-span-7 flex flex-col gap-6">
             <div className="flex items-center justify-between">
               <h2 className="font-serif text-2xl text-ink">The Vault</h2>
               <span className="text-sm font-mono text-ink-3">Persisted locally</span>
