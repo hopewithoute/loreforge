@@ -17,16 +17,8 @@ def prepare_provider_image(image_bytes: bytes) -> bytes:
         if img.mode not in ("RGB", "RGBA"):
             img = img.convert("RGBA")
 
-        width, height = img.size
-        longest_side = max(width, height)
-
-        if longest_side > max_size:
-            ratio = max_size / longest_side
-            new_width = int(width * ratio)
-            new_height = int(height * ratio)
-
-            # Resize using high-quality downsampling
-            img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        # thumbnail automatically preserves aspect ratio and only scales down!
+        img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
 
         output = io.BytesIO()
         img.save(output, format="PNG")
