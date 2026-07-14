@@ -25,12 +25,15 @@ def prepare_provider_image(image_bytes: bytes) -> bytes:
         return output.getvalue()
 
 
-async def validate_and_read_image(file) -> bytes:
+async def validate_and_read_image(file) -> tuple[bytes, str]:
     """
     Safely reads an uploaded file in chunks up to a maximum size limit.
-    Verifies the bytes form a valid PNG or JPEG image.
+    Verifies the bytes form a valid PNG or JPEG image and returns the bytes and extension.
     """
     from fastapi import HTTPException
+    
+    # Prevent decompression bombs
+    Image.MAX_IMAGE_PIXELS = 50_000_000
 
     max_bytes = settings.max_upload_mb * 1024 * 1024
     chunk_size = 1024 * 64
@@ -53,9 +56,10 @@ async def validate_and_read_image(file) -> bytes:
         img.verify()
         if img.format not in ("PNG", "JPEG"):
             raise HTTPException(status_code=422, detail="INVALID_FILE_TYPE")
+        extension = ".png" if img.format == "PNG" else ".jpg"
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=422, detail="INVALID_FILE_TYPE") from e
 
-    return image_bytes
+    return image_bytes, extension

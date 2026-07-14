@@ -24,14 +24,15 @@ async def create_asset(
     )
 
     reference_bytes = None
+    reference_ext = None
     if form_data.reference_image:
-        reference_bytes = await validate_and_read_image(form_data.reference_image)
+        reference_bytes, reference_ext = await validate_and_read_image(form_data.reference_image)
 
     asset = service.create_asset(
         user_id=session_id,
         data=data,
         reference_bytes=reference_bytes,
-        reference_ext=form_data.reference_ext,
+        reference_ext=reference_ext,
     )
 
     # Offload the AI generation and disk IO to the background worker

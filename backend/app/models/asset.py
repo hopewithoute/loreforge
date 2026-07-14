@@ -52,12 +52,9 @@ class AssetCreateForm(BaseModel):
             )
 
         if self.reference_image:
-            self.reference_ext = (
-                Extension.PNG
-                if self.reference_image.content_type == MimeType.PNG
-                else Extension.JPEG
-            )
             # File contents will be processed asynchronously in the route handler
+            # using image_utils.validate_and_read_image to avoid OOM and properly validate bytes.
+            pass
             # using image_utils.validate_and_read_image to avoid OOM and properly validate bytes.
 
         return self
