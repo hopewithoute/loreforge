@@ -7,3 +7,7 @@ class ErrorCode:
 class MimeType:
     JPEG = "image/jpeg"
     PNG = "image/png"
+
+class Extension:
+    JPEG = ".jpg"
+    PNG = ".png"

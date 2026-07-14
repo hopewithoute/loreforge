@@ -5,7 +5,7 @@ from fastapi import Cookie, Depends, File, HTTPException, Response, UploadFile, 
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.constants import ErrorCode, MimeType
+from app.core.constants import ErrorCode, Extension, MimeType
 from app.db.database import get_db
 from app.providers.base import AIProvider
 from app.providers.cloudflare_flux import CloudflareFluxAdapter
@@ -52,7 +52,7 @@ def validate_image_upload(
             detail=ErrorCode.UPLOAD_TOO_LARGE,
         )
 
-    reference_ext = ".png" if reference_image.content_type == MimeType.PNG else ".jpg"
+    reference_ext = Extension.PNG if reference_image.content_type == MimeType.PNG else Extension.JPEG
     return reference_bytes, reference_ext
 
 
