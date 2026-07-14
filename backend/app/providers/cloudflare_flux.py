@@ -50,7 +50,9 @@ class CloudflareFluxAdapter(AIProvider):
 
         files = None
         if reference_image_bytes:
-            # Send the reference image as multipart file payload if present
+            # Send the reference image as multipart file payload if present.
+            # Note: image_bytes is guaranteed to be PNG here because
+            # it was normalized by image_utils.prepare_provider_image.
             files = {"input_image_0": ("reference.png", reference_image_bytes, "image/png")}
 
         logger.info(f"Dispatching to Cloudflare AI [{self.model}] with timeout {self.timeout}s.")
