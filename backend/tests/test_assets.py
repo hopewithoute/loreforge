@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from app.core.config import settings
 from main import app
 
 
@@ -73,8 +74,6 @@ def test_create_asset_with_invalid_file_type(client):
 
 
 def test_create_asset_with_large_file(client, monkeypatch):
-    from app.core.config import settings
-
     # Temporarily set max_upload_mb to 0.0001 (100 bytes) for this test
     monkeypatch.setattr(settings, "max_upload_mb", 0.0001)
 

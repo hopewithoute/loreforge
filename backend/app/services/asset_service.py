@@ -1,8 +1,12 @@
+import logging
 import uuid
+from datetime import UTC, datetime, timedelta
+from typing import cast
 
-from sqlalchemy import select, update
+from sqlalchemy import CursorResult, select, update
 from sqlalchemy.orm import Session
 
+from app.core.constants import ErrorCode
 from app.db.schema import Asset
 from app.models.asset import AssetCreate, AssetEvolve, AssetRead, AssetStatus
 from app.services.image_utils import prepare_provider_image
@@ -108,8 +112,6 @@ class AssetService:
             )
             .values(status=status, **kwargs)
         )
-        from sqlalchemy import CursorResult
-        from typing import cast
         
         result = cast(CursorResult, self._db.execute(stmt))
         self._db.commit()
@@ -156,14 +158,9 @@ def reconcile_stale_assets(db: Session) -> int:
     Marks them as failed so they don't stay pending forever.
     Only targets assets older than 5 minutes.
     """
-    import logging
-    from datetime import datetime, timedelta, timezone
-
-    from app.core.constants import ErrorCode
-
     logger = logging.getLogger(__name__)
 
-    stale_threshold = datetime.now(timezone.utc) - timedelta(minutes=5)
+    stale_threshold = datetime.now(UTC) - timedelta(minutes=5)
 
     stmt = (
         update(Asset)
@@ -177,9 +174,6 @@ def reconcile_stale_assets(db: Session) -> int:
             error_message="Generation interrupted by server restart.",
         )
     )
-    from typing import cast
-
-    from sqlalchemy import CursorResult
 
     result = cast(CursorResult, db.execute(stmt))
     db.commit()

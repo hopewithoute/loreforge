@@ -1,5 +1,6 @@
 import io
 
+from fastapi import HTTPException
 from PIL import Image
 
 from app.core.config import settings
@@ -30,8 +31,6 @@ async def validate_and_read_image(file) -> tuple[bytes, str]:
     Safely reads an uploaded file in chunks up to a maximum size limit.
     Verifies the bytes form a valid PNG or JPEG image and returns the bytes and extension.
     """
-    from fastapi import HTTPException
-    
     # Prevent decompression bombs
     Image.MAX_IMAGE_PIXELS = 50_000_000
 

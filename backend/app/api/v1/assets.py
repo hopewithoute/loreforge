@@ -1,3 +1,4 @@
+import asyncio
 from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Form, HTTPException, status
@@ -28,8 +29,6 @@ async def create_asset(
     if form_data.reference_image:
         reference_bytes, reference_ext = await validate_and_read_image(form_data.reference_image)
 
-    import asyncio
-    
     # Run the synchronous database and storage I/O in a threadpool to prevent blocking the async event loop
     asset = await asyncio.to_thread(
         service.create_asset,

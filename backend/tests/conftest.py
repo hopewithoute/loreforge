@@ -7,9 +7,11 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 import app.api.v1.assets
+from app.api.deps import get_db
 from app.db.schema import Base
 from app.providers.base import GeneratedImageResult
 from app.providers.cloudflare_flux import CloudflareFluxAdapter
+from main import app
 
 # Use an in-memory SQLite database for tests
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
@@ -28,7 +30,7 @@ def mock_background_tasks(monkeypatch):
     async def mock_task(*args, **kwargs):
         pass
 
-    monkeypatch.setattr(app.api.v1.assets, "generate_image_task", mock_task)
+    monkeypatch.setattr("app.api.v1.assets.generate_image_task", mock_task)
 
 
 @pytest.fixture(autouse=True)
@@ -59,9 +61,6 @@ def override_db_dependency():
             yield session
         finally:
             session.close()
-
-    from app.api.deps import get_db
-    from main import app
 
     app.dependency_overrides[get_db] = override_get_db
 

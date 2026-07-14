@@ -1,19 +1,19 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.assets import router as assets_router
 from app.api.v1.health import router as health_router
+from app.core.config import settings
 from app.core.logging import setup_logging
+from app.db.database import SessionLocal
+from app.services.asset_service import reconcile_stale_assets
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    import logging
-
-    from app.db.database import SessionLocal
-    from app.services.asset_service import reconcile_stale_assets
-
     logger = logging.getLogger(__name__)
     try:
         with SessionLocal() as db:
@@ -29,10 +29,6 @@ def create_app() -> FastAPI:
     application = FastAPI(title="LoreForge API", lifespan=lifespan)
     application.include_router(health_router)
     application.include_router(assets_router)
-
-    from fastapi.staticfiles import StaticFiles
-
-    from app.core.config import settings
 
     # Ensure media root exists and mount it
     settings.media_root.mkdir(parents=True, exist_ok=True)

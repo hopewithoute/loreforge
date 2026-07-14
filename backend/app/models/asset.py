@@ -4,8 +4,6 @@ from enum import StrEnum
 from fastapi import UploadFile
 from pydantic import BaseModel, Field, model_validator
 
-from app.core.constants import Extension, MimeType
-
 
 class AssetCategory(StrEnum):
     environment = "environment"

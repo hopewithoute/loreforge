@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import io
 import logging
@@ -72,10 +73,7 @@ class CloudflareFluxAdapter(AIProvider):
         logger.info(f"Dispatching to Cloudflare AI [{self.model}] with timeout {self.timeout}s.")
         # DO NOT log headers to prevent leaking tokens
 
-        # Safely wire debug controls
         if settings.force_ai_timeout:
-            import asyncio
-
             logger.warning("Simulating AI Timeout due to FORCE_AI_TIMEOUT=true")
             await asyncio.sleep(self.timeout + 1)
             raise ProviderTimeoutError("Controlled timeout triggered by debug switch.")

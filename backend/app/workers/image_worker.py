@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import uuid
 
 from app.api.deps import get_ai_provider, get_storage_driver
 from app.core.constants import ErrorCode
@@ -67,8 +68,6 @@ async def _process_generation(
             reference_image_bytes=reference_bytes,
         )
 
-        import uuid
-        
         # 3. Save Image to a temporary distinct filename
         temp_filename = f"generated_{uuid.uuid4().hex[:8]}.png"
         final_path = storage.save(asset_id, temp_filename, result.image_bytes)

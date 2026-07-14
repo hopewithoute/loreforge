@@ -3,7 +3,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 
 from app.db.schema import Base
@@ -32,7 +32,7 @@ def test_sqlite_concurrency():
             },
         )
 
-        from sqlalchemy import event
+
 
         @event.listens_for(engine, "connect")
         def set_sqlite_pragma(dbapi_connection, connection_record):
@@ -107,7 +107,7 @@ def test_same_asset_race_condition():
             connect_args={"check_same_thread": False, "timeout": 15},
         )
 
-        from sqlalchemy import event
+
 
         @event.listens_for(engine, "connect")
         def set_sqlite_pragma(dbapi_connection, connection_record):
