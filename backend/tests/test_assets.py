@@ -15,7 +15,7 @@ def test_create_asset_invalid_prompt(client):
         "/api/assets/", data={"prompt": "ab", "category": "character", "style": "pixel_art"}
     )
     assert response.status_code == 422
-    assert "String should have at least 3 characters" in response.text
+    assert "Prompt must be at least 3 characters if provided" in response.text
 
 
 def test_create_asset_invalid_category(client):

@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import StrEnum
 
 from fastapi import UploadFile
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from app.core.config import settings
 from app.core.constants import Extension, MimeType
@@ -32,7 +32,7 @@ class AssetCreateForm(BaseModel):
 
     category: AssetCategory
     style: AssetStyle
-    prompt: str = ""
+    prompt: str = Field(min_length=3)
     reference_image: UploadFile | None = None
 
     reference_bytes: bytes | None = None
@@ -42,9 +42,6 @@ class AssetCreateForm(BaseModel):
 
     @model_validator(mode="after")
     def validate_form(self):
-        if not self.prompt and not self.reference_image:
-            raise ValueError("Must provide either a prompt or a reference image")
-
         if self.reference_image:
             if self.reference_image.content_type not in (MimeType.JPEG, MimeType.PNG):
                 raise ValueError("Invalid file type. Only JPEG and PNG are supported.")
@@ -66,13 +63,13 @@ class AssetCreateForm(BaseModel):
 
 
 class AssetCreate(BaseModel):
-    prompt: str = ""
+    prompt: str = Field(min_length=3)
     category: AssetCategory
     style: AssetStyle
 
 
 class AssetEvolve(BaseModel):
-    prompt: str = ""
+    prompt: str = Field(min_length=3)
     category: AssetCategory
     style: AssetStyle
 
