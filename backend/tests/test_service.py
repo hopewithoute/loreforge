@@ -33,6 +33,9 @@ class MockStorageDriver(StorageDriver):
     def delete_directory(self, asset_id: str) -> None:
         self.deletions.append(asset_id)
 
+    def delete_file(self, relative_path: str) -> None:
+        pass
+
     def read(self, relative_path: str) -> bytes:
         return b"mock content"
 
@@ -103,7 +106,11 @@ def test_asset_service_status_updates(db_session: Session):
     # Try marking as failed after success (should be ignored because status != pending)
     failed_asset = service.mark_as_failed(asset.id, "user-456", "ERR_01", "Failed")
 
-    # It should still be success
-    assert failed_asset is not None
-    assert failed_asset.status == AssetStatus.success
-    assert failed_asset.error_code is None
+    # It should return None because it lost the atomic race (it wasn't pending)
+    assert failed_asset is None
+
+    # Fetch to ensure it is still success
+    current_asset = service.get_asset(asset.id, "user-456")
+    assert current_asset is not None
+    assert current_asset.status == AssetStatus.success
+    assert current_asset.error_code is None

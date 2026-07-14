@@ -34,6 +34,11 @@ class LocalStorageDriver:
         if asset_dir.exists() and asset_dir.is_dir():
             shutil.rmtree(asset_dir, ignore_errors=True)
 
+    def delete_file(self, relative_path: str) -> None:
+        file_path = self.media_root / relative_path
+        if file_path.exists() and file_path.is_file():
+            file_path.unlink()
+
     def read(self, relative_path: str) -> bytes:
         file_path = self.media_root / relative_path
         if not file_path.exists():

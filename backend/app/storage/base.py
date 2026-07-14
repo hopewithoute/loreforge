@@ -16,6 +16,12 @@ class StorageDriver(Protocol):
         """
         ...
 
+    def delete_file(self, relative_path: str) -> None:
+        """
+        Deletes a specific file given its relative path.
+        """
+        ...
+
     def read(self, relative_path: str) -> bytes:
         """
         Reads content from the storage backend based on a relative path.

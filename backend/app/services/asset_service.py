@@ -108,11 +108,16 @@ class AssetService:
             )
             .values(status=status, **kwargs)
         )
-        self._db.execute(stmt)
+        from sqlalchemy import CursorResult
+        from typing import cast
+        
+        result = cast(CursorResult, self._db.execute(stmt))
         self._db.commit()
 
-        # Whether the update succeeded (rowcount=1) or failed due to race condition (rowcount=0),
-        # we fetch and return the current true state of the database.
+        if result.rowcount == 0:
+            return None
+
+        # Fetch and return the updated state
         asset = self._get_asset_orm(asset_id, user_id)
         if asset:
             return AssetRead.model_validate(asset)
@@ -148,18 +153,24 @@ class AssetService:
 def reconcile_stale_assets(db: Session) -> int:
     """
     Reconcile stale pending assets that were interrupted by a server restart.
-    Marks them as failed so they don't stay pending forever
-    Needed For worker that doesn't have durability across restarts.
+    Marks them as failed so they don't stay pending forever.
+    Only targets assets older than 5 minutes.
     """
     import logging
+    from datetime import datetime, timedelta, timezone
 
     from app.core.constants import ErrorCode
 
     logger = logging.getLogger(__name__)
 
+    stale_threshold = datetime.now(timezone.utc) - timedelta(minutes=5)
+
     stmt = (
         update(Asset)
-        .where(Asset.status == AssetStatus.pending.value)
+        .where(
+            Asset.status == AssetStatus.pending.value,
+            Asset.created_at < stale_threshold
+        )
         .values(
             status=AssetStatus.failed.value,
             error_code=ErrorCode.INTERNAL_ERROR,

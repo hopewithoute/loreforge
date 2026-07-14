@@ -67,11 +67,14 @@ async def _process_generation(
             reference_image_bytes=reference_bytes,
         )
 
-        # 3. Save Image
-        final_path = storage.save(asset_id, "generated.png", result.image_bytes)
+        import uuid
+        
+        # 3. Save Image to a temporary distinct filename
+        temp_filename = f"generated_{uuid.uuid4().hex[:8]}.png"
+        final_path = storage.save(asset_id, temp_filename, result.image_bytes)
 
-        # 4. Mark success
-        service.mark_as_success(
+        # 4. Mark success atomically
+        updated_asset = service.mark_as_success(
             asset_id=asset_id,
             user_id=user_id,
             generated_image_path=final_path,
@@ -81,7 +84,13 @@ async def _process_generation(
                 "seed": result.seed,
             },
         )
-        logger.info(f"Successfully generated and saved asset {asset_id}.")
+        
+        if not updated_asset:
+            # We lost the database race! Another worker already successfully marked this asset.
+            logger.info(f"Asset {asset_id} was already completed. Discarding output {final_path}.")
+            storage.delete_file(final_path)
+        else:
+            logger.info(f"Successfully generated and saved asset {asset_id} at {final_path}.")
 
     except ProviderError as e:
         logger.error(f"Provider error for asset {asset_id}: {e}")
