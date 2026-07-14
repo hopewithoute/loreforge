@@ -43,9 +43,8 @@ def evolve_asset(
     service: AssetServiceDep,
     data: AssetEvolve,
 ) -> AssetRead:
-    try:
-        asset = service.evolve_asset(asset_id, session_id, data)
-    except ValueError:
+    asset = service.evolve_asset(asset_id, session_id, data)
+    if not asset:
         raise HTTPException(status_code=404, detail="Parent asset not found")
 
     background_tasks.add_task(generate_image_task, asset.id, session_id)

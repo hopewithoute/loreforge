@@ -69,10 +69,10 @@ class AssetService:
         asset = self._get_asset_orm(asset_id, user_id)
         return AssetRead.model_validate(asset) if asset else None
 
-    def evolve_asset(self, parent_id: str, user_id: str, data: AssetEvolve) -> AssetRead:
+    def evolve_asset(self, parent_id: str, user_id: str, data: AssetEvolve) -> AssetRead | None:
         parent = self._get_asset_orm(parent_id, user_id)
         if not parent:
-            raise ValueError("Parent asset not found")
+            return None
 
         asset_id = str(uuid.uuid4())
         asset = Asset(
