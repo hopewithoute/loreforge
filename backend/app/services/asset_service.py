@@ -1,13 +1,18 @@
+import uuid
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.schema import Asset
 from app.models.asset import AssetCreate, AssetRead
+from app.services.image_utils import prepare_provider_image
+from app.storage.base import StorageDriver
 
 
 class AssetService:
-    def __init__(self, session: Session):
+    def __init__(self, session: Session, storage: StorageDriver):
         self._db = session
+        self._storage = storage
 
     def _get_asset_orm(self, asset_id: str, user_id: str) -> Asset | None:
         stmt = select(Asset).where(Asset.id == asset_id, Asset.user_id == user_id)
@@ -20,11 +25,8 @@ class AssetService:
         reference_bytes: bytes | None = None,
         reference_ext: str | None = None,
     ) -> AssetRead:
-        import uuid
-
-        from app.services.image_utils import prepare_provider_image
-        from app.storage.local_storage import LocalStorageDriver
-
+        # We allocate the asset ID early so we can use it to create
+        # a strictly isolated directory for this asset's files.
         asset_id = str(uuid.uuid4())
         asset = Asset(
             id=asset_id,
@@ -35,26 +37,33 @@ class AssetService:
             parent_id=data.parent_id,
         )
 
-        storage = LocalStorageDriver()
-
         try:
+            # Step 1: Handle physical file persistence first
             if reference_bytes and reference_ext:
-                # Save original
-                original_path = storage.save(asset_id, f"original{reference_ext}", reference_bytes)
+                # Store the exact uploaded file for user reference/gallery viewing
+                original_path = self._storage.save(
+                    asset_id, f"original{reference_ext}", reference_bytes
+                )
                 asset.reference_image_path = original_path
 
-                # Prepare and save provider copy
+                # Create a downscaled copy specifically formatted for the AI provider
+                # (e.g., max 511px for Cloudflare FLUX)
                 prepared_bytes = prepare_provider_image(reference_bytes)
-                prepared_path = storage.save(asset_id, "prepared.png", prepared_bytes)
+                prepared_path = self._storage.save(asset_id, "prepared.png", prepared_bytes)
                 asset.prepared_input_path = prepared_path
 
+            # Step 2: Attempt to persist the database record
             self._db.add(asset)
             self._db.commit()
             self._db.refresh(asset)
             return AssetRead.model_validate(asset)
+
         except Exception as e:
+            # Step 3: Rollback & Cleanup on failure
+            # If the database fails (e.g. SQLite locked), we must sweep any newly
+            # created images to prevent digital garbage/orphan files on disk.
             self._db.rollback()
-            storage.delete_directory(asset_id)
+            self._storage.delete_directory(asset_id)
             raise e
 
     def get_asset(self, asset_id: str, user_id: str) -> AssetRead | None:

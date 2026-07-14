@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.services.asset_service import AssetService
+from app.storage.base import StorageDriver
+from app.storage.local_storage import LocalStorageDriver
 
 
 def get_session_id(
@@ -28,8 +30,14 @@ def get_session_id(
     return session_id
 
 
-def get_asset_service(db: Session = Depends(get_db)) -> AssetService:
-    return AssetService(db)
+def get_storage_driver() -> StorageDriver:
+    return LocalStorageDriver()
+
+
+def get_asset_service(
+    db: Session = Depends(get_db), storage: StorageDriver = Depends(get_storage_driver)
+) -> AssetService:
+    return AssetService(db, storage)
 
 
 SessionDep = Annotated[str, Depends(get_session_id)]

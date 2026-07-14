@@ -12,7 +12,7 @@ def client():
 
 def test_create_asset_invalid_prompt(client):
     response = client.post(
-        "/api/assets/", json={"prompt": "ab", "category": "character", "style": "pixel_art"}
+        "/api/assets/", data={"prompt": "ab", "category": "character", "style": "pixel_art"}
     )
     assert response.status_code == 422
     assert "String should have at least 3 characters" in response.text
@@ -21,7 +21,7 @@ def test_create_asset_invalid_prompt(client):
 def test_create_asset_invalid_category(client):
     response = client.post(
         "/api/assets/",
-        json={"prompt": "a beautiful sword", "category": "invalid_category", "style": "pixel_art"},
+        data={"prompt": "a beautiful sword", "category": "invalid_category", "style": "pixel_art"},
     )
     assert response.status_code == 422
     assert "Input should be 'environment', 'character' or 'prop'" in response.text
@@ -30,29 +30,28 @@ def test_create_asset_invalid_category(client):
 def test_create_and_get_asset(client):
     response = client.post(
         "/api/assets/",
-        json={"prompt": "a beautiful sword", "category": "prop", "style": "pixel_art"},
+        data={"prompt": "a beautiful sword", "category": "prop", "style": "pixel_art"},
     )
     assert response.status_code == 202
-    data = response.json()
-    assert data["prompt"] == "a beautiful sword"
+    asset_id = response.json()["id"]
+
+    # Verify session cookie was set
+    assert "session_id" in response.cookies
+
+    # Get asset using the same client (session_id cookie is sent automatically)
+    response_get = client.get(f"/api/assets/{asset_id}")
+    assert response_get.status_code == 200
+    data = response_get.json()
+    assert data["id"] == asset_id
     assert data["status"] == "pending"
-    asset_id = data["id"]
-
-    # Client should have received session_id cookie
-    cookies = response.cookies
-    assert "session_id" in cookies
-
-    # Get the asset using the same cookie
-    response2 = client.get(f"/api/assets/{asset_id}", cookies=cookies)
-    assert response2.status_code == 200
-    assert response2.json()["id"] == asset_id
+    assert data["prompt"] == "a beautiful sword"
 
 
 def test_get_asset_wrong_user(client):
     # create asset
     response = client.post(
         "/api/assets/",
-        json={"prompt": "a beautiful sword", "category": "prop", "style": "pixel_art"},
+        data={"prompt": "a beautiful sword", "category": "prop", "style": "pixel_art"},
     )
     asset_id = response.json()["id"]
 
