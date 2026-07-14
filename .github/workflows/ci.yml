@@ -21,7 +21,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version-file: "backend/.python-version"
+          python-version: "3.12"
       - name: Sync dependencies
         run: uv sync
       - name: Check Formatting
@@ -31,4 +31,26 @@ jobs:
       - name: Type Check
         run: uv run pyright
       - name: Run Tests
-        run: uv run python -m pytest
+        run: uv run python -m pytest tests/ -v
+
+  frontend-checks:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        run: npm ci
+      - name: Check Formatting
+        run: npm run format:check
+      - name: Check Linting
+        run: npm run lint
+      - name: Type Check
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
