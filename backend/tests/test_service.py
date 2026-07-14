@@ -6,6 +6,7 @@ from fsspec.implementations.memory import MemoryFileSystem
 from PIL import Image
 from sqlalchemy.orm import Session
 
+from app.core.constants import ErrorCode
 from app.db.schema import Asset
 from app.models.asset import AssetCategory, AssetCreate, AssetStatus, AssetStyle
 from app.services.asset_service import AssetService, reconcile_stale_assets
@@ -110,7 +111,7 @@ def test_asset_service_status_updates(db_session: Session):
     assert success_asset.seed == 42
 
     # Try marking as failed after success (should be ignored because status != pending)
-    failed_asset = service.mark_as_failed(asset.id, "user-456", "ERR_01", "Failed")
+    failed_asset = service.mark_as_failed(asset.id, "user-456", ErrorCode.INTERNAL_ERROR, "Failed")
 
     # It should return None because it lost the atomic race (it wasn't pending)
     assert failed_asset is None

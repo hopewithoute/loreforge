@@ -7,6 +7,7 @@ import pytest
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 
+from app.core.constants import ErrorCode
 from app.db.schema import Base
 from app.models.asset import AssetCategory, AssetCreate, AssetStatus, AssetStyle
 from app.providers.cloudflare_flux import CloudflareFluxAdapter
@@ -151,7 +152,11 @@ def test_same_asset_race_condition():
 
             async def worker2():
                 return await asyncio.to_thread(
-                    service2.mark_as_failed, asset1_id, "user1", "ERR_1", "Error 1"
+                    service2.mark_as_failed,
+                    asset1_id,
+                    "user1",
+                    ErrorCode.INTERNAL_ERROR,
+                    "Error 1",
                 )
 
             await asyncio.gather(worker1(), worker2())
@@ -173,7 +178,7 @@ def test_same_asset_race_condition():
                 assert final_asset.error_code is None
                 assert final_asset.error_message is None
             elif final_asset.status == AssetStatus.failed:
-                assert final_asset.error_code == "ERR_1"
+                assert final_asset.error_code == ErrorCode.INTERNAL_ERROR
                 assert final_asset.error_message == "Error 1"
                 assert final_asset.generated_image_path is None
             else:

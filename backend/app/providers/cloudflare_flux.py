@@ -46,8 +46,6 @@ class CloudflareFluxAdapter(AIProvider):
     async def generate(
         self,
         prompt: str,
-        width: int | None = None,
-        height: int | None = None,
         reference_image_bytes: bytes | None = None,
     ) -> GeneratedImageResult:
 
@@ -64,8 +62,8 @@ class CloudflareFluxAdapter(AIProvider):
 
         data = {
             "prompt": prompt,
-            "width": str(width or self.width),
-            "height": str(height or self.height),
+            "width": str(self.width),
+            "height": str(self.height),
         }
 
         files = None

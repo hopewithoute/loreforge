@@ -158,7 +158,11 @@ class AssetService:
         )
 
     def mark_as_failed(
-        self, asset_id: str, user_id: str, error_code: str, error_message: str
+        self,
+        asset_id: str,
+        user_id: str,
+        error_code: ErrorCode,
+        error_message: str,
     ) -> AssetRead | None:
         return self._transition_pending(
             asset_id,
