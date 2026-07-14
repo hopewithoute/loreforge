@@ -32,9 +32,6 @@ class AssetCreateForm(BaseModel):
     prompt: str = ""
     reference_image: UploadFile | None = None
 
-    reference_bytes: bytes | None = None
-    reference_ext: str | None = None
-
     model_config = {"arbitrary_types_allowed": True}
 
     @model_validator(mode="after")
