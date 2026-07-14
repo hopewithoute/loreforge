@@ -1,7 +1,9 @@
 from datetime import datetime
 from enum import StrEnum
+from fastapi import UploadFile
+from app.core.constants import MimeType
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
 
 
 class AssetCategory(StrEnum):
@@ -21,6 +23,28 @@ class AssetStatus(StrEnum):
     pending = "pending"
     success = "success"
     failed = "failed"
+
+
+class AssetCreateForm(BaseModel):
+    """Centralized Pydantic model for validating the multipart/form-data request shape and rules"""
+    category: AssetCategory
+    style: AssetStyle
+    prompt: str = ""
+    parent_id: str | None = None
+    reference_image: UploadFile | None = None
+
+    model_config = {"arbitrary_types_allowed": True}
+
+    @model_validator(mode="after")
+    def validate_form(self):
+        if not self.prompt and not self.reference_image:
+            raise ValueError("Must provide either a prompt or a reference image")
+            
+        if self.reference_image:
+            if self.reference_image.content_type not in (MimeType.JPEG, MimeType.PNG):
+                raise ValueError("Invalid file type. Only JPEG and PNG are supported.")
+                
+        return self
 
 
 class AssetCreate(BaseModel):

@@ -1,11 +1,10 @@
 import uuid
 from typing import Annotated
 
-from fastapi import Cookie, Depends, File, HTTPException, Response, UploadFile, status
+from fastapi import Cookie, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.constants import ErrorCode, Extension, MimeType
 from app.db.database import get_db
 from app.providers.base import AIProvider
 from app.providers.cloudflare_flux import CloudflareFluxAdapter
@@ -33,32 +32,7 @@ def get_asset_service(db: DbDep, storage: StorageDep) -> AssetService:
 AssetServiceDep = Annotated[AssetService, Depends(get_asset_service)]
 
 
-def validate_image_upload(
-    reference_image: Annotated[UploadFile | None, File()] = None,
-) -> tuple[bytes | None, str | None]:
-    if not reference_image:
-        return None, None
 
-    if reference_image.content_type not in (MimeType.JPEG, MimeType.PNG):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=ErrorCode.INVALID_FILE_TYPE,
-        )
-
-    reference_bytes = reference_image.file.read()
-    max_bytes = settings.max_upload_mb * 1024 * 1024
-
-    if len(reference_bytes) > max_bytes:
-        raise HTTPException(
-            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
-            detail=ErrorCode.UPLOAD_TOO_LARGE,
-        )
-
-    reference_ext = Extension.PNG if reference_image.content_type == MimeType.PNG else Extension.JPEG
-    return reference_bytes, reference_ext
-
-
-ValidImageDep = Annotated[tuple[bytes | None, str | None], Depends(validate_image_upload)]
 
 
 def get_session_id(

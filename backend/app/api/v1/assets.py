@@ -2,8 +2,10 @@ from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Form, HTTPException, status
 
-from app.api.deps import AssetServiceDep, SessionDep, ValidImageDep
-from app.models.asset import AssetCategory, AssetCreate, AssetRead, AssetStyle
+from app.api.deps import AssetServiceDep, SessionDep
+from app.models.asset import AssetCreate, AssetRead, AssetCreateForm
+from app.core.constants import MimeType, Extension
+from app.core.config import settings
 from app.workers.image_worker import generate_image_task
 
 router = APIRouter(prefix="/api/assets", tags=["assets"])
@@ -14,17 +16,29 @@ def create_asset(
     background_tasks: BackgroundTasks,
     session_id: SessionDep,
     service: AssetServiceDep,
-    category: Annotated[AssetCategory, Form()],
-    style: Annotated[AssetStyle, Form()],
-    image_data: ValidImageDep,
-    prompt: Annotated[str, Form()] = "",
-    parent_id: Annotated[str | None, Form()] = None,
+    form_data: Annotated[AssetCreateForm, Form()],
 ) -> AssetRead:
-    reference_bytes, reference_ext = image_data
-    if not prompt and not reference_bytes:
-        raise HTTPException(status_code=422, detail="Must provide either a prompt or a reference image")
+    reference_bytes = None
+    reference_ext = None
+    
+    if form_data.reference_image:
+        reference_bytes = form_data.reference_image.file.read()
+        max_bytes = settings.max_upload_mb * 1024 * 1024
         
-    data = AssetCreate(prompt=prompt, category=category, style=style, parent_id=parent_id)
+        if len(reference_bytes) > max_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+                detail="File size exceeds the maximum limit.",
+            )
+            
+        reference_ext = Extension.PNG if form_data.reference_image.content_type == MimeType.PNG else Extension.JPEG
+
+    data = AssetCreate(
+        prompt=form_data.prompt, 
+        category=form_data.category, 
+        style=form_data.style, 
+        parent_id=form_data.parent_id
+    )
 
     asset = service.create_asset(
         user_id=session_id,

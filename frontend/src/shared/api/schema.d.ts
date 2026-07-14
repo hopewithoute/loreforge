@@ -65,6 +65,23 @@ export interface components {
          * @enum {string}
          */
         AssetCategory: "environment" | "character" | "prop";
+        /**
+         * AssetCreateForm
+         * @description Centralized Pydantic model for validating the multipart/form-data request shape and rules
+         */
+        AssetCreateForm: {
+            category: components["schemas"]["AssetCategory"];
+            style: components["schemas"]["AssetStyle"];
+            /**
+             * Prompt
+             * @default
+             */
+            prompt: string;
+            /** Parent Id */
+            parent_id?: string | null;
+            /** Reference Image */
+            reference_image?: string | null;
+        };
         /** AssetRead */
         AssetRead: {
             /** Id */
@@ -115,20 +132,6 @@ export interface components {
          * @enum {string}
          */
         AssetStyle: "concept_art" | "isometric_rpg" | "pixel_art" | "dark_fantasy";
-        /** Body_create_asset_api_assets__post */
-        Body_create_asset_api_assets__post: {
-            category: components["schemas"]["AssetCategory"];
-            style: components["schemas"]["AssetStyle"];
-            /**
-             * Prompt
-             * @default
-             */
-            prompt: string;
-            /** Parent Id */
-            parent_id?: string | null;
-            /** Reference Image */
-            reference_image?: string | null;
-        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -226,7 +229,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "multipart/form-data": components["schemas"]["Body_create_asset_api_assets__post"];
+                "application/x-www-form-urlencoded": components["schemas"]["AssetCreateForm"];
             };
         };
         responses: {
