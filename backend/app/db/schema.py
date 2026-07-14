@@ -23,7 +23,9 @@ class Asset(Base):
     reference_image_path: Mapped[str | None] = mapped_column(String)
     prepared_input_path: Mapped[str | None] = mapped_column(String)
     generated_image_path: Mapped[str | None] = mapped_column(String)
-    parent_id: Mapped[str | None] = mapped_column(String, ForeignKey("assets.id", ondelete="SET NULL"))
+    parent_id: Mapped[str | None] = mapped_column(
+        String, ForeignKey("assets.id", ondelete="SET NULL")
+    )
 
     status: Mapped[str] = mapped_column(String, default=AssetStatus.pending.value)
     error_code: Mapped[str | None] = mapped_column(String)

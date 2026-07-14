@@ -1,4 +1,4 @@
-import { CATEGORY_OPTIONS, STYLE_OPTIONS } from '../types';
+import { CATEGORY_OPTIONS, STYLE_OPTIONS } from "../types";
 
 interface GeneratorFormProps {
   onSubmit: (formData: FormData) => void;
@@ -9,11 +9,13 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
   const action = (formData: FormData) => {
     if (isPending) return;
 
-    const prompt = formData.get('prompt') as string;
-    const refImage = formData.get('reference_image') as File | null;
+    const prompt = formData.get("prompt") as string;
+    const refImage = formData.get("reference_image") as File | null;
 
     if (!prompt.trim() && (!refImage || refImage.size === 0)) {
-      alert("Please provide either a Core Prompt or a Reference Image (or both) to Forge.");
+      alert(
+        "Please provide either a Core Prompt or a Reference Image (or both) to Forge.",
+      );
       return;
     }
 
@@ -25,7 +27,10 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
       <div className="grid grid-cols-2 gap-4">
         {/* Category Field */}
         <div className="flex flex-col gap-2">
-          <label htmlFor="category" className="text-xs font-mono text-ink-3 uppercase tracking-wider">
+          <label
+            htmlFor="category"
+            className="text-xs font-mono text-ink-3 uppercase tracking-wider"
+          >
             Category
           </label>
           <div className="relative">
@@ -43,14 +48,29 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
               ))}
             </select>
             <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-              <svg className="w-4 h-4 text-ink-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              <svg
+                className="w-4 h-4 text-ink-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
             </div>
           </div>
         </div>
 
         {/* Style Field */}
         <div className="flex flex-col gap-2">
-          <label htmlFor="style" className="text-xs font-mono text-ink-3 uppercase tracking-wider">
+          <label
+            htmlFor="style"
+            className="text-xs font-mono text-ink-3 uppercase tracking-wider"
+          >
             Style
           </label>
           <div className="relative">
@@ -68,7 +88,19 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
               ))}
             </select>
             <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-              <svg className="w-4 h-4 text-ink-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              <svg
+                className="w-4 h-4 text-ink-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
             </div>
           </div>
         </div>
@@ -76,7 +108,10 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
 
       {/* Prompt Field */}
       <div className="flex flex-col gap-2">
-        <label htmlFor="prompt" className="text-xs font-mono text-ink-3 uppercase tracking-wider">
+        <label
+          htmlFor="prompt"
+          className="text-xs font-mono text-ink-3 uppercase tracking-wider"
+        >
           Core Prompt <span className="opacity-50">(Required if no image)</span>
         </label>
         <textarea
@@ -90,7 +125,10 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
 
       {/* Reference Image (Optional) */}
       <div className="flex flex-col gap-2">
-        <label htmlFor="reference_image" className="text-xs font-mono text-ink-3 uppercase tracking-wider">
+        <label
+          htmlFor="reference_image"
+          className="text-xs font-mono text-ink-3 uppercase tracking-wider"
+        >
           Reference Image <span className="opacity-50">(Optional)</span>
         </label>
         <input
@@ -110,7 +148,7 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
         className="mt-4 w-full relative group inline-flex items-center justify-center rounded-lg bg-accent/10 border border-accent/20 px-8 py-4 text-sm font-mono tracking-widest text-accent hover:bg-accent hover:text-paper transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-accent/10 disabled:hover:text-accent overflow-hidden"
       >
         <span className="relative z-10 flex items-center">
-          {isPending ? '[ FORGING_ASSET... ]' : '[ INITIALIZE_FORGE ]'}
+          {isPending ? "[ FORGING_ASSET... ]" : "[ INITIALIZE_FORGE ]"}
         </span>
       </button>
     </form>

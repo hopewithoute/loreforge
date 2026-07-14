@@ -24,18 +24,19 @@ def prepare_provider_image(image_bytes: bytes) -> bytes:
         img.save(output, format="PNG")
         return output.getvalue()
 
+
 async def validate_and_read_image(file) -> bytes:
     """
     Safely reads an uploaded file in chunks up to a maximum size limit.
     Verifies the bytes form a valid PNG or JPEG image.
     """
     from fastapi import HTTPException
-    
+
     max_bytes = settings.max_upload_mb * 1024 * 1024
     chunk_size = 1024 * 64
     bytes_read = 0
     buffer = bytearray()
-    
+
     while True:
         chunk = await file.read(chunk_size)
         if not chunk:
@@ -44,7 +45,7 @@ async def validate_and_read_image(file) -> bytes:
         if bytes_read > max_bytes:
             raise HTTPException(status_code=413, detail="UPLOAD_TOO_LARGE")
         buffer.extend(chunk)
-        
+
     image_bytes = bytes(buffer)
     try:
         # Use Pillow to verify it's structurally valid
@@ -54,7 +55,7 @@ async def validate_and_read_image(file) -> bytes:
             raise HTTPException(status_code=422, detail="INVALID_FILE_TYPE")
     except HTTPException:
         raise
-    except Exception:
-        raise HTTPException(status_code=422, detail="INVALID_FILE_TYPE")
-        
+    except Exception as e:
+        raise HTTPException(status_code=422, detail="INVALID_FILE_TYPE") from e
+
     return image_bytes

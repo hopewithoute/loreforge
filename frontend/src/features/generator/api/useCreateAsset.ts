@@ -1,5 +1,5 @@
-import { useMutation } from '@tanstack/react-query';
-import { client } from '../../../shared/api/base';
+import { useMutation } from "@tanstack/react-query";
+import { client } from "../../../shared/api/base";
 
 export function useCreateAsset() {
   return useMutation({
@@ -13,7 +13,7 @@ export function useCreateAsset() {
       if (error) {
         throw new Error("Failed to create asset");
       }
-      
+
       return data;
     },
   });

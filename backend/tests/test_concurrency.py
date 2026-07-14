@@ -2,6 +2,7 @@ import asyncio
 import tempfile
 from pathlib import Path
 
+import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -125,7 +126,9 @@ def test_same_asset_race_condition():
         with TestSessionLocal() as db:
             service = AssetService(db, storage)
             data1 = AssetCreate(
-                prompt="race condition 1", category=AssetCategory.character, style=AssetStyle.pixel_art
+                prompt="race condition 1",
+                category=AssetCategory.character,
+                style=AssetStyle.pixel_art,
             )
             asset1 = service.create_asset("user1", data1)
             db.commit()
@@ -141,7 +144,11 @@ def test_same_asset_race_condition():
             # Both try to transition from pending to a terminal state at the exact same time
             async def worker1():
                 return await asyncio.to_thread(
-                    service1.mark_as_success, asset1_id, "user1", "/test/path.png", {"provider_name": "test"}
+                    service1.mark_as_success,
+                    asset1_id,
+                    "user1",
+                    "/test/path.png",
+                    {"provider_name": "test"},
                 )
 
             async def worker2():
@@ -161,7 +168,7 @@ def test_same_asset_race_condition():
             final_asset = AssetService(db, storage).get_asset(asset1_id, "user1")
             assert final_asset is not None
 
-            # If the transition was not atomic, it might end up with status=failed 
+            # If the transition was not atomic, it might end up with status=failed
             # BUT have generated_image_path set (a mix of both updates).
             if final_asset.status == AssetStatus.success:
                 assert final_asset.generated_image_path == "/test/path.png"
@@ -172,4 +179,4 @@ def test_same_asset_race_condition():
                 assert final_asset.error_message == "Error 1"
                 assert final_asset.generated_image_path is None
             else:
-                assert False, f"Unexpected final status: {final_asset.status}"
+                pytest.fail(f"Unexpected final status: {final_asset.status}")

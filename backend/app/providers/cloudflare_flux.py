@@ -71,17 +71,20 @@ class CloudflareFluxAdapter(AIProvider):
 
         logger.info(f"Dispatching to Cloudflare AI [{self.model}] with timeout {self.timeout}s.")
         # DO NOT log headers to prevent leaking tokens
-        
+
         # Safely wire debug controls
         if settings.force_ai_timeout:
             import asyncio
+
             logger.warning("Simulating AI Timeout due to FORCE_AI_TIMEOUT=true")
             await asyncio.sleep(self.timeout + 1)
             raise ProviderTimeoutError("Controlled timeout triggered by debug switch.")
-            
+
         if settings.force_broken_provider_response:
             logger.warning("Simulating Broken Response due to FORCE_BROKEN_PROVIDER_RESPONSE=true")
-            raise ProviderBrokenResponseError("Controlled broken response triggered by debug switch.")
+            raise ProviderBrokenResponseError(
+                "Controlled broken response triggered by debug switch."
+            )
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -89,7 +92,9 @@ class CloudflareFluxAdapter(AIProvider):
 
             match response.status_code:
                 case 401 | 403:
-                    raise ProviderConfigError("Cloudflare API token is invalid or lacks permissions.")
+                    raise ProviderConfigError(
+                        "Cloudflare API token is invalid or lacks permissions."
+                    )
                 case 429:
                     raise ProviderRateLimitError("Cloudflare AI rate limit exceeded.")
                 case code if 400 <= code < 500:
@@ -110,7 +115,9 @@ class CloudflareFluxAdapter(AIProvider):
             try:
                 parsed = CloudflareResponse.model_validate(payload)
             except ValidationError as e:
-                raise ProviderBrokenResponseError("Cloudflare response failed schema validation.") from e
+                raise ProviderBrokenResponseError(
+                    "Cloudflare response failed schema validation."
+                ) from e
 
             if not parsed.result or not parsed.result.image:
                 raise ProviderBrokenResponseError("Cloudflare response missing 'result.image'.")
@@ -124,11 +131,15 @@ class CloudflareFluxAdapter(AIProvider):
                 img = Image.open(io.BytesIO(image_bytes))
                 img.verify()
                 if img.format not in self.SUPPORTED_FORMATS:
-                    raise ProviderBrokenResponseError(f"Cloudflare returned unsupported format: {img.format}")
+                    raise ProviderBrokenResponseError(
+                        f"Cloudflare returned unsupported format: {img.format}"
+                    )
             except ProviderBrokenResponseError:
                 raise
             except Exception as e:
-                raise ProviderBrokenResponseError("Cloudflare returned bytes that are not a valid image.") from e
+                raise ProviderBrokenResponseError(
+                    "Cloudflare returned bytes that are not a valid image."
+                ) from e
 
             return GeneratedImageResult(
                 image_bytes=image_bytes,

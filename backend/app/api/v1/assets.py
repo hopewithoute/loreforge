@@ -4,12 +4,11 @@ from fastapi import APIRouter, BackgroundTasks, Form, HTTPException, status
 
 from app.api.deps import AssetServiceDep, SessionDep
 from app.models.asset import AssetCreate, AssetCreateForm, AssetEvolve, AssetRead
+from app.services.image_utils import validate_and_read_image
 from app.workers.image_worker import generate_image_task
 
 router = APIRouter(prefix="/api/assets", tags=["assets"])
 
-
-from app.services.image_utils import validate_and_read_image
 
 @router.post("/", status_code=status.HTTP_202_ACCEPTED)
 async def create_asset(

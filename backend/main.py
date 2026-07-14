@@ -5,23 +5,22 @@ from fastapi import FastAPI
 from app.api.v1.assets import router as assets_router
 from app.api.v1.health import router as health_router
 from app.core.logging import setup_logging
-from app.db.database import engine
-from app.db.schema import Base
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    import logging
+
     from app.db.database import SessionLocal
     from app.services.asset_service import reconcile_stale_assets
-    import logging
-    
+
     logger = logging.getLogger(__name__)
     try:
         with SessionLocal() as db:
             reconcile_stale_assets(db)
     except Exception as e:
         logger.error(f"Failed to reconcile stale assets on startup: {e}")
-        
+
     yield
 
 

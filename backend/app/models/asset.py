@@ -4,7 +4,6 @@ from enum import StrEnum
 from fastapi import UploadFile
 from pydantic import BaseModel, Field, model_validator
 
-from app.core.config import settings
 from app.core.constants import Extension, MimeType
 
 
@@ -43,12 +42,14 @@ class AssetCreateForm(BaseModel):
     @model_validator(mode="after")
     def validate_form(self):
         stripped_prompt = self.prompt.strip() if self.prompt else ""
-        
+
         if self.prompt and len(stripped_prompt) < 3:
             raise ValueError("Prompt must be at least 3 characters if provided.")
-            
+
         if not stripped_prompt and not self.reference_image:
-            raise ValueError("Must provide either a prompt of at least 3 characters or a reference image.")
+            raise ValueError(
+                "Must provide either a prompt of at least 3 characters or a reference image."
+            )
 
         if self.reference_image:
             self.reference_ext = (
