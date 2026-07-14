@@ -49,12 +49,30 @@ def mock_cloudflare_adapter(monkeypatch):
     monkeypatch.setattr(CloudflareFluxAdapter, "generate", mock_generate)
 
 
+@pytest.fixture(autouse=True)
+def override_db_dependency():
+    Base.metadata.create_all(bind=engine)
+    
+    def override_get_db():
+        session = TestingSessionLocal()
+        try:
+            yield session
+        finally:
+            session.close()
+
+    from main import app
+    from app.api.deps import get_db
+    app.dependency_overrides[get_db] = override_get_db
+    
+    yield
+    
+    app.dependency_overrides.clear()
+    Base.metadata.drop_all(bind=engine)
+
 @pytest.fixture
 def db_session():
-    Base.metadata.create_all(bind=engine)
     session = TestingSessionLocal()
     try:
         yield session
     finally:
         session.close()
-        Base.metadata.drop_all(bind=engine)

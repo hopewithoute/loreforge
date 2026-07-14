@@ -71,6 +71,17 @@ class CloudflareFluxAdapter(AIProvider):
 
         logger.info(f"Dispatching to Cloudflare AI [{self.model}] with timeout {self.timeout}s.")
         # DO NOT log headers to prevent leaking tokens
+        
+        # Safely wire debug controls
+        if settings.force_ai_timeout:
+            import asyncio
+            logger.warning("Simulating AI Timeout due to FORCE_AI_TIMEOUT=true")
+            await asyncio.sleep(self.timeout + 1)
+            raise ProviderTimeoutError("Controlled timeout triggered by debug switch.")
+            
+        if settings.force_broken_provider_response:
+            logger.warning("Simulating Broken Response due to FORCE_BROKEN_PROVIDER_RESPONSE=true")
+            raise ProviderBrokenResponseError("Controlled broken response triggered by debug switch.")
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:

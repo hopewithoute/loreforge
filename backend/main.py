@@ -11,34 +11,16 @@ from app.db.schema import Base
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
-    
-    # Reconcile stale pending assets that were interrupted by a server restart
-    from sqlalchemy import update
-    import logging
     from app.db.database import SessionLocal
-    from app.db.schema import Asset
-    from app.models.asset import AssetStatus
-    from app.core.constants import ErrorCode
+    from app.services.asset_service import reconcile_stale_assets
+    import logging
     
     logger = logging.getLogger(__name__)
     try:
         with SessionLocal() as db:
-            stmt = (
-                update(Asset)
-                .where(Asset.status == AssetStatus.pending.value)
-                .values(
-                    status=AssetStatus.failed.value,
-                    error_code=ErrorCode.INTERNAL_ERROR,
-                    error_message="Generation interrupted by server restart."
-                )
-            )
-            result = db.execute(stmt)
-            db.commit()
-            if result.rowcount > 0:
-                logger.info(f"Reconciled {result.rowcount} stale pending assets to failed state.")
+            reconcile_stale_assets(db)
     except Exception as e:
-        logger.error(f"Failed to reconcile stale assets: {e}")
+        logger.error(f"Failed to reconcile stale assets on startup: {e}")
         
     yield
 

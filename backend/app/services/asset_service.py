@@ -143,3 +143,31 @@ class AssetService:
             error_code=error_code,
             error_message=error_message,
         )
+
+
+def reconcile_stale_assets(db: Session) -> int:
+    """
+    Reconcile stale pending assets that were interrupted by a server restart.
+    Marks them as failed so they don't stay pending forever.
+    """
+    import logging
+    from app.core.constants import ErrorCode
+    
+    logger = logging.getLogger(__name__)
+    
+    stmt = (
+        update(Asset)
+        .where(Asset.status == AssetStatus.pending.value)
+        .values(
+            status=AssetStatus.failed.value,
+            error_code=ErrorCode.INTERNAL_ERROR,
+            error_message="Generation interrupted by server restart."
+        )
+    )
+    result = db.execute(stmt)
+    db.commit()
+    
+    if result.rowcount > 0:
+        logger.info(f"Reconciled {result.rowcount} stale pending assets to failed state.")
+        
+    return result.rowcount
