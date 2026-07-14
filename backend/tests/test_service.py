@@ -4,7 +4,7 @@ import pytest
 from PIL import Image
 from sqlalchemy.orm import Session
 
-from app.models.asset import AssetCategory, AssetCreate, AssetStyle
+from app.models.asset import AssetCategory, AssetCreate, AssetStatus, AssetStyle
 from app.services.asset_service import AssetService
 from app.storage.base import StorageDriver
 
@@ -32,7 +32,7 @@ class MockStorageDriver(StorageDriver):
 
     def delete_directory(self, asset_id: str) -> None:
         self.deletions.append(asset_id)
-            
+
     def read(self, relative_path: str) -> bytes:
         return b"mock content"
 
@@ -48,7 +48,7 @@ def test_asset_service_create_asset_success(db_session: Session, dummy_image_byt
     asset = service.create_asset("user-123", data, dummy_image_bytes, ".png")
 
     assert asset.prompt == "test prompt"
-    assert asset.status == "pending"
+    assert asset.status == AssetStatus.pending
     assert len(storage.saves) == 2
     assert storage.saves[0][1] == "original.png"
     assert storage.saves[1][1] == "prepared.png"
@@ -84,7 +84,7 @@ def test_asset_service_status_updates(db_session: Session):
     )
     asset = service.create_asset("user-456", data)
 
-    assert asset.status == "pending"
+    assert asset.status == AssetStatus.pending
 
     # Mark as success
     success_asset = service.mark_as_success(
@@ -95,7 +95,7 @@ def test_asset_service_status_updates(db_session: Session):
     )
 
     assert success_asset is not None
-    assert success_asset.status == "success"
+    assert success_asset.status == AssetStatus.success
     assert success_asset.generated_image_path == "mock/gen.png"
     assert success_asset.provider_model == "flux"
     assert success_asset.seed == 42
@@ -105,5 +105,5 @@ def test_asset_service_status_updates(db_session: Session):
 
     # It should still be success
     assert failed_asset is not None
-    assert failed_asset.status == "success"
+    assert failed_asset.status == AssetStatus.success
     assert failed_asset.error_code is None

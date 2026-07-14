@@ -31,7 +31,7 @@ def create_app() -> FastAPI:
 
     # We only mount frontend if the directory exists to avoid errors in pure backend dev
     if settings.frontend_dist.exists():
-        application.frontend("/", directory=str(settings.frontend_dist))
+        application.mount("/", StaticFiles(directory=str(settings.frontend_dist), html=True), name="frontend")
 
     return application
 

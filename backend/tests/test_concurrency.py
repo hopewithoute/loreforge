@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.db.schema import Base
-from app.models.asset import AssetCategory, AssetCreate, AssetStyle
+from app.models.asset import AssetCategory, AssetCreate, AssetStatus, AssetStyle
 from app.providers.cloudflare_flux import CloudflareFluxAdapter
 from app.services.asset_service import AssetService
 from app.storage.local_storage import LocalStorageDriver
@@ -89,5 +89,5 @@ def test_sqlite_concurrency():
 
             assert updated1 is not None
             assert updated2 is not None
-            assert updated1.status == "success"
-            assert updated2.status == "success"
+            assert updated1.status == AssetStatus.success
+            assert updated2.status == AssetStatus.success
