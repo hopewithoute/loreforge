@@ -32,6 +32,9 @@ class MockStorageDriver(StorageDriver):
 
     def delete_directory(self, asset_id: str) -> None:
         self.deletions.append(asset_id)
+            
+    def read(self, relative_path: str) -> bytes:
+        return b"mock content"
 
 
 def test_asset_service_create_asset_success(db_session: Session, dummy_image_bytes: bytes):

@@ -6,9 +6,19 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.db.database import get_db
+from app.providers.base import AIProvider
+from app.providers.cloudflare_flux import CloudflareFluxAdapter
 from app.services.asset_service import AssetService
 from app.storage.base import StorageDriver
 from app.storage.local_storage import LocalStorageDriver
+
+
+def get_storage_driver() -> StorageDriver:
+    return LocalStorageDriver()
+
+
+def get_ai_provider() -> AIProvider:
+    return CloudflareFluxAdapter()
 
 
 def validate_image_upload(
@@ -51,10 +61,6 @@ def get_session_id(
             max_age=60 * 60 * 24 * 365,  # 1 year
         )
     return session_id
-
-
-def get_storage_driver() -> StorageDriver:
-    return LocalStorageDriver()
 
 
 def get_asset_service(
