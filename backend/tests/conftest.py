@@ -16,7 +16,7 @@ def db_session():
     )
     Base.metadata.create_all(bind=engine)
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    
+
     session = TestingSessionLocal()
     try:
         yield session

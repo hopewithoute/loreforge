@@ -4,6 +4,7 @@ from fastapi import FastAPI
 
 from app.api.v1.assets import router as assets_router
 from app.api.v1.health import router as health_router
+from app.core.logging import setup_logging
 from app.db.database import engine
 from app.db.schema import Base
 
@@ -15,6 +16,7 @@ async def lifespan(app: FastAPI):
 
 
 def create_app() -> FastAPI:
+    setup_logging()
     application = FastAPI(title="LoreForge API", lifespan=lifespan)
     application.include_router(health_router)
     application.include_router(assets_router)
