@@ -59,20 +59,24 @@ def validate_image_upload(
 ValidImageDep = Annotated[tuple[bytes | None, str | None], Depends(validate_image_upload)]
 
 
-from fastapi import Header
-
 def get_session_id(
-    x_user_id: Annotated[str | None, Header()] = None,
+    response: Response,
+    session_id: Annotated[str | None, Cookie()] = None,
 ) -> str:
     """
-    Retrieves the anonymous user ID from the x-user-id header.
-    Requires the client to manage their UUID (e.g., in LocalStorage).
+    Retrieves the anonymous session_id from the httpOnly cookie.
+    If it doesn't exist, generates a new UUID and sets it.
     """
-    if not x_user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, 
-            detail="x-user-id header missing"
+    if not session_id:
+        session_id = str(uuid.uuid4())
+        response.set_cookie(
+            key="session_id",
+            value=session_id,
+            httponly=True,
+            samesite="lax",
+            max_age=60 * 60 * 24 * 365,  # 1 year
         )
-    return x_user_id
+    return session_id
+
 
 SessionDep = Annotated[str, Depends(get_session_id)]
