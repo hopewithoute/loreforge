@@ -1,7 +1,10 @@
 import base64
+import io
 import logging
 
 import httpx
+from PIL import Image
+from pydantic import BaseModel, ValidationError
 
 from app.core.config import settings
 from app.core.constants import MimeType
@@ -15,6 +18,14 @@ from app.core.errors import (
 from app.providers.base import AIProvider, GeneratedImageResult
 
 logger = logging.getLogger(__name__)
+
+
+class CloudflareResult(BaseModel):
+    image: str
+
+
+class CloudflareResponse(BaseModel):
+    result: CloudflareResult | None = None
 
 
 class CloudflareFluxAdapter(AIProvider):
@@ -67,28 +78,43 @@ class CloudflareFluxAdapter(AIProvider):
                 raise ProviderConfigError("Cloudflare API token is invalid or lacks permissions.")
             elif response.status_code == 429:
                 raise ProviderRateLimitError("Cloudflare AI rate limit exceeded.")
+            elif 400 <= response.status_code < 500:
+                raise ProviderUnavailableError(f"Cloudflare returned {response.status_code} client error.")
             elif response.status_code >= 500:
-                raise ProviderUnavailableError(f"Cloudflare returned {response.status_code} error.")
+                raise ProviderUnavailableError(f"Cloudflare returned {response.status_code} server error.")
 
             response.raise_for_status()
 
-            payload = response.json()
+            try:
+                payload = response.json()
+            except Exception as e:
+                raise ProviderBrokenResponseError("Cloudflare response was not valid JSON.") from e
 
-            if (
-                not isinstance(payload, dict)
-                or "result" not in payload
-                or "image" not in payload["result"]
-            ):
-                raise ProviderBrokenResponseError("Cloudflare response missing 'result.image'.")
-
-            base64_img = payload["result"]["image"]
-            if not base64_img:
-                raise ProviderBrokenResponseError("Cloudflare returned an empty image string.")
+            if not isinstance(payload, dict):
+                raise ProviderBrokenResponseError("Cloudflare response was not a JSON object.")
 
             try:
-                image_bytes = base64.b64decode(base64_img)
+                parsed = CloudflareResponse.model_validate(payload)
+            except ValidationError as e:
+                raise ProviderBrokenResponseError("Cloudflare response failed schema validation.") from e
+
+            if not parsed.result or not parsed.result.image:
+                raise ProviderBrokenResponseError("Cloudflare response missing 'result.image'.")
+
+            try:
+                image_bytes = base64.b64decode(parsed.result.image, validate=True)
             except Exception as e:
                 raise ProviderBrokenResponseError("Failed to decode Base64 image payload.") from e
+
+            try:
+                img = Image.open(io.BytesIO(image_bytes))
+                img.verify()
+                if img.format not in ("PNG", "JPEG"):
+                    raise ProviderBrokenResponseError(f"Cloudflare returned unsupported format: {img.format}")
+            except ProviderBrokenResponseError:
+                raise
+            except Exception as e:
+                raise ProviderBrokenResponseError("Cloudflare returned bytes that are not a valid image.") from e
 
             return GeneratedImageResult(
                 image_bytes=image_bytes,
