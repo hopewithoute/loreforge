@@ -1,54 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,600;1,600&display=swap');
 @import "tailwindcss";
 
 @theme {
-  /* Hallmark Lumen Theme Tokens (Atmospheric cluster, Night Foundry) */
-  --font-sans: "Geist Sans", "Inter", system-ui, sans-serif;
-  --font-serif: "Instrument Serif", ui-serif, serif;
-  --font-mono: "Geist Mono", "JetBrains Mono", monospace;
+  --color-paper: #F4F3ED;       
+  --color-graphite: #1C1C1A;    
+  --color-pencil-gray: #7A7A75; 
+  --color-red-pencil: #D63C2E;  
+  --color-blueprint: #2A5C8B;   
 
-  --color-paper: oklch(14% 0.01 260); /* Deep dark canvas */
-  --color-paper-2: oklch(18% 0.01 260); /* Elevated card */
-  --color-paper-3: oklch(22% 0.01 260); /* Hover state */
-
-  --color-ink: oklch(92% 0 0); /* Primary text */
-  --color-ink-2: oklch(70% 0 0); /* Secondary text */
-  --color-ink-3: oklch(45% 0 0); /* Borders / Muted */
-
-  --color-accent: oklch(75% 0.15 50); /* Warm amber/gold focal point */
-  --color-accent-hover: oklch(80% 0.15 50);
-
-  --color-danger: oklch(65% 0.2 25); /* Error states */
-  --color-success: oklch(75% 0.15 150); /* Success states */
+  --font-serif: 'Playfair Display', serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-caveat: 'Caveat', cursive;
 }
 
 :root {
-  background-color: var(--color-paper);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  color-scheme: dark;
+  --paper: #F4F3ED;       
+  --graphite: #1C1C1A;    
+  --pencil-gray: #7A7A75; 
+  --red-pencil: #D63C2E;  
+  --blueprint: #2A5C8B;   
+  
+  --line-thin: 1px solid var(--graphite);
+  --line-dashed: 1px dashed var(--pencil-gray);
+  --origami-shadow: 4px 4px 0px rgba(28, 28, 26, 0.08);
+  --active-shadow: 2px 2px 0px var(--red-pencil);
 }
 
-html,
 body {
-  overflow-x: clip;
   margin: 0;
   padding: 0;
+  background-color: var(--paper);
+  /* Blueprint/Graph paper grid */
+  background-image: 
+    linear-gradient(rgba(122, 122, 117, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(122, 122, 117, 0.1) 1px, transparent 1px);
+  background-size: 40px 40px;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--graphite);
+  display: flex;
   min-height: 100vh;
+  overflow-x: hidden;
+  color-scheme: light;
 }
 
-/* Microinteractions base classes */
-.btn {
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.btn:active {
-  transform: translateY(1px);
+:focus-visible {
+  outline: 1px solid var(--red-pencil);
+  outline-offset: 3px;
 }
 
-@keyframes drift {
-  0% {
-    transform: scale(1.05) translate(0, 0);
-  }
-  100% {
-    transform: scale(1.1) translate(-2%, 2%);
+/* Base utility overrides for origami style */
+* {
+  border-radius: 0 !important; /* Force origami sharp corners globally */
+}
+
+/* App Layout Container */
+.app-container {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .app-container {
+    flex-direction: column;
   }
 }
+
+/* Custom Scrollbar for drafting panel */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--pencil-gray); }
+
+/* Horizontal scrollbar for track cards */
+.horizontal-scrollbar::-webkit-scrollbar { height: 4px; }
+.horizontal-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.horizontal-scrollbar::-webkit-scrollbar-thumb { background: rgba(122,122,117,0.3); }
+.horizontal-scrollbar:hover::-webkit-scrollbar-thumb { background: var(--pencil-gray); }
+
