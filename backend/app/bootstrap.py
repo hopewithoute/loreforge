@@ -19,6 +19,10 @@ def get_storage_driver() -> fsspec.AbstractFileSystem:
 def create_ai_provider(config: Settings) -> AIProvider:
     if config.ai_provider == "cloudflare_flux":
         return CloudflareFluxAdapter(config)
+    elif config.ai_provider.startswith("mock_"):
+        from app.providers.mock import MockAIProvider
+        mode = config.ai_provider.replace("mock_", "")
+        return MockAIProvider(mode=mode)
     raise ProviderConfigError(f"Unsupported AI provider: {config.ai_provider}")
 
 

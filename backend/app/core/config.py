@@ -36,8 +36,6 @@ class Settings(BaseSettings):
 
     frontend_dist: Path = Path("../frontend/dist")
 
-    force_ai_timeout: bool = False
-    force_broken_provider_response: bool = False
 
 
 @lru_cache
