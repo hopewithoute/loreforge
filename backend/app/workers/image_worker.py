@@ -22,8 +22,6 @@ def generate_image_task(asset_id: str, user_id: str) -> None:
     """
     FastAPI BackgroundTask entrypoint.
     Creates concrete dependencies and starts a fresh DB session.
-    Because this is a synchronous function, FastAPI runs it in a threadpool,
-    preventing DB/Storage synchronous I/O from blocking the main event loop.
     """
     # Create concrete instances using central factories to prevent drift
     storage = get_storage_driver()
@@ -48,6 +46,7 @@ async def _process_generation(
     logger.info(f"Starting background generation for Asset: {asset_id}")
 
     asset = service.get_asset(asset_id, user_id)
+    # Guard condition: check existence of asset
     if not asset:
         logger.warning(f"Worker cannot find asset {asset_id}. Exiting.")
         return
@@ -60,7 +59,6 @@ async def _process_generation(
     try:
         # 1. Prepare inputs
         prompt = build_prompt(asset.category, asset.style, asset.prompt)
-
         reference_bytes: bytes | None = None
         if asset.prepared_input_path:
             reference_bytes = cast(bytes, storage.cat_file(asset.prepared_input_path))

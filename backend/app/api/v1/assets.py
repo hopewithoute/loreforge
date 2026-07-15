@@ -23,11 +23,14 @@ def create_asset(
         style=form_data.style,
     )
 
+    #Reference Image Validation Block
     reference_bytes = None
     reference_ext = None
     if form_data.reference_image:
         reference_bytes, reference_ext = validate_and_read_image(form_data.reference_image)
 
+    # Create the asset generation record, including the reference image if provided
+    # Reference image is resized to max reference size and converted to png
     asset = service.create_asset(
         user_id=session_id,
         data=data,

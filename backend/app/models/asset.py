@@ -36,7 +36,7 @@ class AssetCreateForm(BaseModel):
 
     @model_validator(mode="after")
     def validate_form(self):
-        stripped_prompt = self.prompt.strip() if self.prompt else ""
+        stripped_prompt = self.prompt.strip()
 
         if self.prompt and len(stripped_prompt) < 3:
             raise ValueError("Prompt must be at least 3 characters if provided.")

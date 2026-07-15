@@ -68,7 +68,7 @@ class AssetService:
         except Exception:
             # Step 3: Rollback & Cleanup on failure
             # If the database fails (e.g. SQLite locked), we must sweep any newly
-            # created images to prevent digital garbage/orphan files on disk.
+            # created images to prevent orphan files on disk.
             self._db.rollback()
             with contextlib.suppress(FileNotFoundError):
                 self._storage.rm(f"assets/{asset_id}", recursive=True)
@@ -80,7 +80,7 @@ class AssetService:
 
     def evolve_asset(self, parent_id: str, user_id: str, data: AssetEvolve) -> AssetRead | None:
         parent = self._get_asset_orm(parent_id, user_id)
-        if not parent:
+        if not parent or not parent.generated_image_path:
             return None
 
         asset_id = str(uuid.uuid4())
@@ -94,12 +94,22 @@ class AssetService:
         )
 
         try:
+            # Prepare the parent's generated image to be used as the new asset's input
+            parent_image_bytes = cast(bytes, self._storage.cat_file(parent.generated_image_path))
+            prepared_bytes = prepare_provider_image(parent_image_bytes)
+            
+            prepared_path = f"assets/{asset_id}/prepared.png"
+            self._storage.pipe_file(prepared_path, prepared_bytes)
+            asset.prepared_input_path = prepared_path
+
             self._db.add(asset)
             self._db.commit()
             self._db.refresh(asset)
             return AssetRead.model_validate(asset)
         except Exception:
             self._db.rollback()
+            with contextlib.suppress(FileNotFoundError):
+                self._storage.rm(f"assets/{asset_id}", recursive=True)
             raise
 
     def list_assets(self, user_id: str) -> list[AssetRead]:
@@ -132,9 +142,8 @@ class AssetService:
 
         # Fetch and return the updated state
         asset = self._get_asset_orm(asset_id, user_id)
-        if asset:
-            return AssetRead.model_validate(asset)
-        return None
+        assert asset is not None, f"Row {asset_id} vanished after successful UPDATE"
+        return AssetRead.model_validate(asset)
 
     def mark_as_success(
         self,
@@ -175,13 +184,14 @@ class AssetService:
         )
 
 
-def reconcile_stale_assets(db: Session) -> int:
+def reconcile_stale_assets(db: Session, threshold: timedelta | None = None) -> int:
     """
     Reconcile stale pending assets that were interrupted by a server restart.
     Marks them as failed so they don't stay pending forever.
-    Only targets assets older than 5 minutes.
+    Only targets assets older than the given threshold (default 5 minutes).
     """
-    stale_threshold = datetime.now(UTC) - STALE_ASSET_THRESHOLD
+    active_threshold = threshold if threshold is not None else STALE_ASSET_THRESHOLD
+    stale_threshold = datetime.now(UTC) - active_threshold
 
     stmt = (
         update(Asset)

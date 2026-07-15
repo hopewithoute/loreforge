@@ -1,7 +1,9 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from app.bootstrap import get_storage_driver
 from app.core.config import settings
+from app.services.asset_service import AssetService
 from main import app
 
 
@@ -88,13 +90,28 @@ def test_create_asset_with_large_file(client, monkeypatch):
     assert "UPLOAD_TOO_LARGE" in response.json()["detail"]
 
 
-def test_evolve_asset_success(client):
+def test_evolve_asset_success(client, db_session):
     # First create an asset
     response = client.post(
         "/api/assets/",
         data={"prompt": "a base sword", "category": "prop", "style": "pixel_art"},
     )
     parent_id = response.json()["id"]
+
+    # In Option B, evolve requires the parent to have a generated image.
+
+
+    service = AssetService(db_session, get_storage_driver())
+    user_id = client.cookies.get("session_id")
+
+    # We must create a fake image file in storage so `cat_file` doesn't crash
+    storage = get_storage_driver()
+    fake_image_path = f"assets/{parent_id}/generated_fake.png"
+    # 1x1 png
+    fake_png = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\x9cc\xfc\xff\xff\xff\xff\xff\x7f\x00\t\xbe\x02\xfe\x93\x11\x14\x95\x00\x00\x00\x00IEND\xaeB`\x82'
+    storage.pipe_file(fake_image_path, fake_png)
+
+    service.mark_as_success(parent_id, user_id, fake_image_path, "test_provider", "test_model", 123)
 
     # Now evolve it
     evolve_response = client.post(
