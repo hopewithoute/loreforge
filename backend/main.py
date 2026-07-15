@@ -1,5 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
+from datetime import timedelta
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -17,7 +18,7 @@ async def lifespan(app: FastAPI):
     logger = logging.getLogger(__name__)
     try:
         with SessionLocal() as db:
-            reconcile_stale_assets(db)
+            reconcile_stale_assets(db, threshold=timedelta(seconds=0))
     except Exception as e:
         logger.error(f"Failed to reconcile stale assets on startup: {e}")
 

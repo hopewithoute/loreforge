@@ -44,8 +44,7 @@ class CloudflareFluxAdapter(AIProvider):
         self.timeout = runtime.ai_timeout_seconds
         self.width = runtime.ai_image_width
         self.height = runtime.ai_image_height
-        self.force_timeout = runtime.force_ai_timeout
-        self.force_broken_response = runtime.force_broken_provider_response
+
 
     async def generate(
         self,
@@ -80,16 +79,7 @@ class CloudflareFluxAdapter(AIProvider):
         logger.info(f"Dispatching to Cloudflare AI [{self.model}] with timeout {self.timeout}s.")
         # DO NOT log headers to prevent leaking tokens
 
-        if self.force_timeout:
-            logger.warning("Simulating AI Timeout due to FORCE_AI_TIMEOUT=true")
-            await asyncio.sleep(self.timeout + 1)
-            raise ProviderTimeoutError("Controlled timeout triggered by debug switch.")
 
-        if self.force_broken_response:
-            logger.warning("Simulating Broken Response due to FORCE_BROKEN_PROVIDER_RESPONSE=true")
-            raise ProviderBrokenResponseError(
-                "Controlled broken response triggered by debug switch."
-            )
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -107,15 +97,10 @@ class CloudflareFluxAdapter(AIProvider):
                 case code if code >= 500:
                     raise ProviderUnavailableError(f"Cloudflare returned {code} server error.")
 
-            response.raise_for_status()
-
             try:
                 payload = response.json()
             except Exception as e:
                 raise ProviderBrokenResponseError("Cloudflare response was not valid JSON.") from e
-
-            if not isinstance(payload, dict):
-                raise ProviderBrokenResponseError("Cloudflare response was not a JSON object.")
 
             try:
                 parsed = CloudflareResponse.model_validate(payload)

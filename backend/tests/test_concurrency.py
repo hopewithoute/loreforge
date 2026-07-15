@@ -64,21 +64,17 @@ def test_sqlite_concurrency():
             asset1_id = asset1.id
             asset2_id = asset2.id
 
+        def sync_worker(asset_id, user):
+            with TestSessionLocal() as session:
+                service = AssetService(session, storage)
+                asyncio.run(_process_generation(asset_id, user, service, storage, provider))
+
         async def run_concurrently():
-            session1 = TestSessionLocal()
-            session2 = TestSessionLocal()
-
-            service1 = AssetService(session1, storage)
-            service2 = AssetService(session2, storage)
-
-            # Run them at the exact same time
+            # Run them at the exact same time using a thread pool to simulate real requests
             await asyncio.gather(
-                _process_generation(asset1_id, "user1", service1, storage, provider),
-                _process_generation(asset2_id, "user2", service2, storage, provider),
+                asyncio.to_thread(sync_worker, asset1_id, "user1"),
+                asyncio.to_thread(sync_worker, asset2_id, "user2"),
             )
-
-            session1.close()
-            session2.close()
 
         asyncio.run(run_concurrently())
 
