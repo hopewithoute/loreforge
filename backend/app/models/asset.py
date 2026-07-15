@@ -31,6 +31,8 @@ class AssetCreateForm(BaseModel):
     style: AssetStyle
     prompt: str = ""
     reference_image: UploadFile | None = None
+    existing_reference_id: str | None = None
+    sibling_id: str | None = None
 
     model_config = {"arbitrary_types_allowed": True}
 
@@ -41,10 +43,20 @@ class AssetCreateForm(BaseModel):
         if self.prompt and len(stripped_prompt) < 3:
             raise ValueError("Prompt must be at least 3 characters if provided.")
 
-        if not stripped_prompt and not self.reference_image:
+        has_image = (
+            self.reference_image is not None 
+            and self.reference_image.size is not None 
+            and self.reference_image.size > 0
+        ) or bool(self.existing_reference_id)
+        
+        if not stripped_prompt and not has_image:
             raise ValueError(
                 "Must provide either a prompt of at least 3 characters or a reference image."
             )
+
+        # Clear empty reference_image so route handler doesn't try to process it
+        if not has_image:
+            self.reference_image = None
 
         return self
 
@@ -72,6 +84,7 @@ class AssetRead(BaseModel):
     prepared_input_path: str | None
     generated_image_path: str | None
     parent_id: str | None
+    sibling_id: str | None
 
     status: AssetStatus
     error_code: str | None

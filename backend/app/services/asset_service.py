@@ -32,6 +32,8 @@ class AssetService:
         data: AssetCreate,
         reference_bytes: bytes | None = None,
         reference_ext: str | None = None,
+        existing_reference_id: str | None = None,
+        sibling_id: str | None = None,
     ) -> AssetRead:
         # We allocate the asset ID early so we can use it to create
         # a strictly isolated directory for this asset's files.
@@ -43,6 +45,12 @@ class AssetService:
             category=data.category.value,
             style=data.style.value,
         )
+
+        if sibling_id:
+            original_asset = self._get_asset_orm(sibling_id, user_id)
+            if original_asset:
+                asset.parent_id = original_asset.parent_id
+                asset.sibling_id = original_asset.sibling_id or original_asset.id
 
         try:
             # Step 1: Handle physical file persistence first
@@ -58,6 +66,18 @@ class AssetService:
                 prepared_path = f"assets/{asset_id}/prepared.png"
                 self._storage.pipe_file(prepared_path, prepared_bytes)
                 asset.prepared_input_path = prepared_path
+            elif existing_reference_id:
+                # User wants to regenerate using an existing image. We physically copy it.
+                old_asset = self._get_asset_orm(existing_reference_id, user_id)
+                if old_asset and old_asset.reference_image_path and old_asset.prepared_input_path:
+                    new_ref_path = f"assets/{asset_id}/{old_asset.reference_image_path.split('/')[-1]}"
+                    new_prep_path = f"assets/{asset_id}/prepared.png"
+                    
+                    self._storage.copy(old_asset.reference_image_path, new_ref_path)
+                    self._storage.copy(old_asset.prepared_input_path, new_prep_path)
+                    
+                    asset.reference_image_path = new_ref_path
+                    asset.prepared_input_path = new_prep_path
 
             # Step 2: Attempt to persist the database record
             self._db.add(asset)
@@ -77,6 +97,20 @@ class AssetService:
     def get_asset(self, asset_id: str, user_id: str) -> AssetRead | None:
         asset = self._get_asset_orm(asset_id, user_id)
         return AssetRead.model_validate(asset) if asset else None
+
+    def retry_asset(self, asset_id: str, user_id: str) -> AssetRead | None:
+        asset = self._get_asset_orm(asset_id, user_id)
+        if not asset or asset.status != AssetStatus.failed.value:
+            return None
+
+        # Reset status and clear error messages
+        asset.status = AssetStatus.pending.value
+        asset.error_code = None
+        asset.error_message = None
+
+        self._db.commit()
+        self._db.refresh(asset)
+        return AssetRead.model_validate(asset)
 
     def evolve_asset(self, parent_id: str, user_id: str, data: AssetEvolve) -> AssetRead | None:
         parent = self._get_asset_orm(parent_id, user_id)

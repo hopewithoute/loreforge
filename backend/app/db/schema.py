@@ -26,6 +26,7 @@ class Asset(Base):
     parent_id: Mapped[str | None] = mapped_column(
         String, ForeignKey("assets.id", ondelete="SET NULL")
     )
+    sibling_id: Mapped[str | None] = mapped_column(String, index=True, nullable=True)
 
     status: Mapped[str] = mapped_column(String, default=AssetStatus.pending.value)
     error_code: Mapped[str | None] = mapped_column(String)

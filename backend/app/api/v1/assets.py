@@ -26,7 +26,7 @@ def create_asset(
     #Reference Image Validation Block
     reference_bytes = None
     reference_ext = None
-    if form_data.reference_image:
+    if form_data.reference_image and form_data.reference_image.size is not None and form_data.reference_image.size > 0:
         reference_bytes, reference_ext = validate_and_read_image(form_data.reference_image)
 
     # Create the asset generation record, including the reference image if provided
@@ -36,6 +36,8 @@ def create_asset(
         data=data,
         reference_bytes=reference_bytes,
         reference_ext=reference_ext,
+        existing_reference_id=form_data.existing_reference_id,
+        sibling_id=form_data.sibling_id,
     )
 
     # Offload the AI generation and disk IO to the background worker
@@ -55,6 +57,21 @@ def evolve_asset(
     asset = service.evolve_asset(asset_id, session_id, data)
     if not asset:
         raise HTTPException(status_code=404, detail="Parent asset not found")
+
+    background_tasks.add_task(generate_image_task, asset.id, session_id)
+    return asset
+
+
+@router.post("/{asset_id}/retry", status_code=status.HTTP_202_ACCEPTED)
+def retry_asset_endpoint(
+    asset_id: str,
+    background_tasks: BackgroundTasks,
+    session_id: SessionDep,
+    service: AssetServiceDep,
+) -> AssetRead:
+    asset = service.retry_asset(asset_id, session_id)
+    if not asset:
+        raise HTTPException(status_code=404, detail="Failed asset not found")
 
     background_tasks.add_task(generate_image_task, asset.id, session_id)
     return asset
