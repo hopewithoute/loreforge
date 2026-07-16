@@ -17,16 +17,26 @@ def create_asset(
     service: AssetServiceDep,
     form_data: Annotated[AssetCreateForm, Form()],
 ) -> AssetRead:
+    if service.has_pending_assets(session_id):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="You already have a generation in progress. Please wait.",
+        )
+
     data = AssetCreate(
         prompt=form_data.prompt,
         category=form_data.category,
         style=form_data.style,
     )
 
-    #Reference Image Validation Block
+    # Reference Image Validation Block
     reference_bytes = None
     reference_ext = None
-    if form_data.reference_image and form_data.reference_image.size is not None and form_data.reference_image.size > 0:
+    if (
+        form_data.reference_image
+        and form_data.reference_image.size is not None
+        and form_data.reference_image.size > 0
+    ):
         reference_bytes, reference_ext = validate_and_read_image(form_data.reference_image)
 
     # Create the asset generation record, including the reference image if provided
@@ -54,6 +64,12 @@ def evolve_asset(
     service: AssetServiceDep,
     data: AssetEvolve,
 ) -> AssetRead:
+    if service.has_pending_assets(session_id):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="You already have a generation in progress. Please wait.",
+        )
+
     asset = service.evolve_asset(asset_id, session_id, data)
     if not asset:
         raise HTTPException(status_code=404, detail="Parent asset not found")
@@ -63,12 +79,18 @@ def evolve_asset(
 
 
 @router.post("/{asset_id}/retry", status_code=status.HTTP_202_ACCEPTED)
-def retry_asset_endpoint(
+def retry_asset(
     asset_id: str,
     background_tasks: BackgroundTasks,
     session_id: SessionDep,
     service: AssetServiceDep,
 ) -> AssetRead:
+    if service.has_pending_assets(session_id):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="You already have a generation in progress. Please wait.",
+        )
+
     asset = service.retry_asset(asset_id, session_id)
     if not asset:
         raise HTTPException(status_code=404, detail="Failed asset not found")
@@ -87,6 +109,17 @@ def get_asset(
     if not asset:
         raise HTTPException(status_code=404, detail="Asset not found")
     return asset
+
+
+@router.delete("/{asset_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_asset(
+    asset_id: str,
+    session_id: SessionDep,
+    service: AssetServiceDep,
+):
+    success = service.delete_asset(asset_id, session_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Asset not found")
 
 
 @router.get("/")

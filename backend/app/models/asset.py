@@ -44,11 +44,11 @@ class AssetCreateForm(BaseModel):
             raise ValueError("Prompt must be at least 3 characters if provided.")
 
         has_image = (
-            self.reference_image is not None 
-            and self.reference_image.size is not None 
+            self.reference_image is not None
+            and self.reference_image.size is not None
             and self.reference_image.size > 0
         ) or bool(self.existing_reference_id)
-        
+
         if not stripped_prompt and not has_image:
             raise ValueError(
                 "Must provide either a prompt of at least 3 characters or a reference image."

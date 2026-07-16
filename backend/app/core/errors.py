@@ -41,3 +41,9 @@ class ProviderUnavailableError(ProviderError):
     """Raised when the provider encounters network errors or internal 5xx errors."""
 
     code = ErrorCode.PROVIDER_UNAVAILABLE
+
+
+class ProviderInvalidPromptError(ProviderError):
+    """Raised when the provider rejects the prompt as invalid or flagged."""
+
+    code = ErrorCode.INVALID_PROMPT

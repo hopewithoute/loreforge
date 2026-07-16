@@ -26,6 +26,14 @@ class AssetService:
         stmt = select(Asset).where(Asset.id == asset_id, Asset.user_id == user_id)
         return self._db.scalars(stmt).first()
 
+    def has_pending_assets(self, user_id: str) -> bool:
+        stmt = (
+            select(Asset)
+            .where(Asset.user_id == user_id, Asset.status == AssetStatus.pending.value)
+            .limit(1)
+        )
+        return self._db.scalars(stmt).first() is not None
+
     def create_asset(
         self,
         user_id: str,
@@ -70,12 +78,14 @@ class AssetService:
                 # User wants to regenerate using an existing image. We physically copy it.
                 old_asset = self._get_asset_orm(existing_reference_id, user_id)
                 if old_asset and old_asset.reference_image_path and old_asset.prepared_input_path:
-                    new_ref_path = f"assets/{asset_id}/{old_asset.reference_image_path.split('/')[-1]}"
+                    new_ref_path = (
+                        f"assets/{asset_id}/{old_asset.reference_image_path.split('/')[-1]}"
+                    )
                     new_prep_path = f"assets/{asset_id}/prepared.png"
-                    
+
                     self._storage.copy(old_asset.reference_image_path, new_ref_path)
                     self._storage.copy(old_asset.prepared_input_path, new_prep_path)
-                    
+
                     asset.reference_image_path = new_ref_path
                     asset.prepared_input_path = new_prep_path
 
@@ -97,6 +107,21 @@ class AssetService:
     def get_asset(self, asset_id: str, user_id: str) -> AssetRead | None:
         asset = self._get_asset_orm(asset_id, user_id)
         return AssetRead.model_validate(asset) if asset else None
+
+    def delete_asset(self, asset_id: str, user_id: str) -> bool:
+        asset = self._get_asset_orm(asset_id, user_id)
+        if not asset:
+            return False
+
+        try:
+            self._db.delete(asset)
+            self._db.commit()
+            with contextlib.suppress(FileNotFoundError):
+                self._storage.rm(f"assets/{asset_id}", recursive=True)
+            return True
+        except Exception:
+            self._db.rollback()
+            raise
 
     def retry_asset(self, asset_id: str, user_id: str) -> AssetRead | None:
         asset = self._get_asset_orm(asset_id, user_id)
@@ -131,7 +156,7 @@ class AssetService:
             # Prepare the parent's generated image to be used as the new asset's input
             parent_image_bytes = cast(bytes, self._storage.cat_file(parent.generated_image_path))
             prepared_bytes = prepare_provider_image(parent_image_bytes)
-            
+
             prepared_path = f"assets/{asset_id}/prepared.png"
             self._storage.pipe_file(prepared_path, prepared_bytes)
             asset.prepared_input_path = prepared_path
