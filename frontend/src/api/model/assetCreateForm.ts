@@ -1,0 +1,16 @@
+/* eslint-disable */
+// @ts-nocheck
+import type { AssetCategory } from "./assetCategory";
+import type { AssetStyle } from "./assetStyle";
+
+/**
+ * Centralized Pydantic model for validating the multipart/form-data request shape and rules
+ */
+export interface AssetCreateForm {
+  category: AssetCategory;
+  style: AssetStyle;
+  prompt?: string;
+  reference_image?: Blob | null;
+  existing_reference_id?: string | null;
+  sibling_id?: string | null;
+}
