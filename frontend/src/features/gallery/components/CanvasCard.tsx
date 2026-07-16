@@ -74,7 +74,9 @@ export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
     }
 
     setValue("fileInputResetKey", Date.now());
-    document.getElementById("generator-form")?.scrollIntoView({ behavior: "smooth" });
+    if (window.innerWidth < 768) {
+      document.getElementById("generator-form")?.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   const handleRegenerate = () => populateForm("regen");

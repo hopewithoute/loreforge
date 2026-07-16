@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { SiblingDeck } from "./SiblingDeck";
 import type { EvolutionNode } from "./GalleryBoard";
 import { cn } from "@/lib/utils";
@@ -66,13 +66,24 @@ export function EvolutionTrack({ tree }: EvolutionTrackProps) {
     }
   }, []);
 
+  const nodeCount = useMemo(() => {
+    function count(node: EvolutionNode): number {
+      return node.siblings.length + node.children.reduce((sum, child) => sum + count(child), 0);
+    }
+    return count(tree);
+  }, [tree]);
+
+  const prevNodeCount = useRef(nodeCount);
+
   useEffect(() => {
-    if (scrollRef.current) {
+    if (scrollRef.current && nodeCount > prevNodeCount.current) {
       scrollRef.current.scrollTo({
         left: scrollRef.current.scrollWidth,
         behavior: "smooth",
       });
     }
+    prevNodeCount.current = nodeCount;
+    
     // Delay checks to let images load and layout settle
     const t1 = setTimeout(updateScrollState, 200);
     const t2 = setTimeout(updateScrollState, 1500);

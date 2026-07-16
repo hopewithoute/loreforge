@@ -1,6 +1,7 @@
 import { useGallery } from "@/features/gallery/api/useGallery";
 import { EvolutionTrack } from "./EvolutionTrack";
 import type { Asset } from "@/features/generator/types";
+import { Logo } from "@/components/Logo";
 
 export interface EvolutionNode {
   groupId: string;
@@ -60,8 +61,14 @@ export function GalleryBoard() {
 
   if (trackRoots.length === 0) {
     return (
-      <div className="p-10 font-mono text-(--pencil-gray) opacity-50">
-        The canvas is empty. Initialize a render to begin.
+      <div className="flex flex-1 flex-col items-center justify-center p-10 pb-[15vh]">
+        <Logo className="h-64 w-64 brightness-0 grayscale opacity-[0.04]" />
+        <h2 className="mt-8 font-['Playfair_Display',serif] text-3xl italic text-(--graphite) opacity-60">
+          The Forge is Cold.
+        </h2>
+        <p className="mt-4 font-sans text-sm uppercase tracking-[0.2em] text-(--pencil-gray) opacity-50">
+          Enter a prompt in the station to strike the anvil
+        </p>
       </div>
     );
   }
