@@ -11,15 +11,23 @@ CATEGORY_MODIFIERS = {
     "prop": "single isolated object, game item, weapon or artifact design, studio lighting, center focus",
 }
 
-def build_prompt(category: str, style: str, user_prompt: str) -> str:
+def build_prompt(category: str, style: str, user_prompt: str, is_evolve: bool = False) -> str:
     """
     Translates structured domain inputs into a robust prompt for the image generation model.
     """
     style_suffix = STYLE_MODIFIERS.get(style, "")
     cat_suffix = CATEGORY_MODIFIERS.get(category, "")
 
+    evolve_modifier = (
+        "CRITICAL: Maintain exact identity, preserve original structural features, "
+        "keep identical subject, consistent design, identical face and clothing. "
+        if is_evolve
+        else ""
+    )
+
     # We construct a highly descriptive prompt tailored for game concept art
     return (
+        f"{evolve_modifier}"
         f"{user_prompt.strip()}, "
         f"{category.replace('_', ' ')} design, {style.replace('_', ' ')} game style. "
         f"{cat_suffix}, {style_suffix}. "

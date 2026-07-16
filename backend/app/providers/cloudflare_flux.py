@@ -1,4 +1,3 @@
-import asyncio
 import base64
 import io
 import logging
@@ -13,6 +12,7 @@ from app.core.constants import MimeType
 from app.core.errors import (
     ProviderBrokenResponseError,
     ProviderConfigError,
+    ProviderInvalidPromptError,
     ProviderRateLimitError,
     ProviderTimeoutError,
     ProviderUnavailableError,
@@ -45,11 +45,11 @@ class CloudflareFluxAdapter(AIProvider):
         self.width = runtime.ai_image_width
         self.height = runtime.ai_image_height
 
-
     async def generate(
         self,
         prompt: str,
-        reference_image_bytes: bytes | None = None,
+        reference_image_bytes: bytes | list[bytes] | None = None,
+        strength: float | None = None,
     ) -> GeneratedImageResult:
 
         if (
@@ -69,33 +69,68 @@ class CloudflareFluxAdapter(AIProvider):
             "height": str(self.height),
         }
 
+        if strength is not None:
+            data["strength"] = str(strength)
+
         files = None
         if reference_image_bytes:
-            # Send the reference image as multipart file payload if present.
-            # Note: image_bytes is guaranteed to be PNG here because
-            # it was normalized by image_utils.prepare_provider_image.
-            files = {"input_image_0": ("reference.png", reference_image_bytes, MimeType.PNG)}
+            files = {}
+            if isinstance(reference_image_bytes, bytes):
+                reference_images = [reference_image_bytes]
+            else:
+                reference_images = reference_image_bytes
+
+            # Cloudflare FLUX models support up to 4 images
+            for i, img_bytes in enumerate(reference_images[:4]):
+                files[f"input_image_{i}"] = (f"reference_{i}.png", img_bytes, MimeType.PNG)
 
         logger.info(f"Dispatching to Cloudflare AI [{self.model}] with timeout {self.timeout}s.")
         # DO NOT log headers to prevent leaking tokens
-
-
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 response = await client.post(url, headers=headers, data=data, files=files)
 
+            # First, try to parse the Cloudflare standard JSON error format
+            cf_error_code = None
+            cf_error_message = None
+            if response.status_code >= 400:
+                try:
+                    error_json = response.json()
+                    errors = error_json.get("errors", [])
+                    if errors and len(errors) > 0:
+                        cf_error_code = errors[0].get("code")
+                        cf_error_message = errors[0].get("message")
+                except ValueError:
+                    pass
+
             match response.status_code:
+                case 200:
+                    pass  # Handled below
                 case 401 | 403:
-                    raise ProviderConfigError(
-                        "Cloudflare API token is invalid or lacks permissions."
+                    msg = (
+                        cf_error_message or "Cloudflare API token is invalid or lacks permissions."
                     )
+                    raise ProviderConfigError(f"Cloudflare Config Error: {msg}")
+                case 408:
+                    msg = cf_error_message or "Cloudflare API request timeout."
+                    raise ProviderTimeoutError(f"Cloudflare Timeout: {msg}")
+                case 413:
+                    msg = cf_error_message or "Cloudflare API request too large."
+                    raise ProviderInvalidPromptError(f"Cloudflare Payload Too Large: {msg}")
                 case 429:
-                    raise ProviderRateLimitError("Cloudflare AI rate limit exceeded.")
+                    msg = cf_error_message or "Cloudflare AI rate limit or capacity exceeded."
+                    raise ProviderRateLimitError(
+                        f"Cloudflare Rate Limit (Code {cf_error_code}): {msg}"
+                    )
                 case code if 400 <= code < 500:
-                    raise ProviderUnavailableError(f"Cloudflare returned {code} client error.")
+                    msg = cf_error_message or f"Cloudflare returned {code} client error."
+                    logger.error(f"Cloudflare {code} Client Error. Body: {response.text}")
+                    # Assume 400s are prompt/input validation errors
+                    raise ProviderInvalidPromptError(f"Cloudflare Error: {msg}")
                 case code if code >= 500:
-                    raise ProviderUnavailableError(f"Cloudflare returned {code} server error.")
+                    msg = cf_error_message or f"Cloudflare returned {code} server error."
+                    raise ProviderUnavailableError(f"Cloudflare Server Error: {msg}")
 
             try:
                 payload = response.json()

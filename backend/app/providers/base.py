@@ -25,7 +25,8 @@ class AIProvider(Protocol):
     async def generate(
         self,
         prompt: str,
-        reference_image_bytes: bytes | None = None,
+        reference_image_bytes: bytes | list[bytes] | None = None,
+        strength: float | None = None,
     ) -> GeneratedImageResult:
         """
         Generates an image from a prompt and an optional reference image.

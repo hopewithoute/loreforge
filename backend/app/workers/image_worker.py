@@ -58,15 +58,45 @@ async def _process_generation(
 
     try:
         # 1. Prepare inputs
-        prompt = build_prompt(asset.category, asset.style, asset.prompt)
-        reference_bytes: bytes | None = None
+        reference_images: list[bytes] = []
+        is_evolve_mode = False
+        strength: float | None = None
+
         if asset.prepared_input_path:
-            reference_bytes = cast(bytes, storage.cat_file(asset.prepared_input_path))
+            # If there's a prepared input but no original reference, it came from Evolve
+            if not asset.reference_image_path:
+                is_evolve_mode = True
+                strength = 0.70
+
+                # Retrieve the historical sliding window (up to 4)
+                current_node = asset
+                while current_node and len(reference_images) < 4:
+                    if current_node.prepared_input_path:
+                        try:
+                            img_bytes = cast(
+                                bytes, storage.cat_file(current_node.prepared_input_path)
+                            )
+                            reference_images.append(img_bytes)
+                        except FileNotFoundError:
+                            pass
+
+                    if current_node.parent_id:
+                        current_node = service._get_asset_orm(current_node.parent_id, user_id)
+                    else:
+                        break
+            else:
+                # It came from a user sketch (Create/Regenerate)
+                strength = 0.85
+                img_bytes = cast(bytes, storage.cat_file(asset.prepared_input_path))
+                reference_images.append(img_bytes)
+
+        prompt = build_prompt(asset.category, asset.style, asset.prompt, is_evolve=is_evolve_mode)
 
         # 2. Generate Image
         result = await provider.generate(
             prompt=prompt,
-            reference_image_bytes=reference_bytes,
+            reference_image_bytes=reference_images if reference_images else None,
+            strength=strength,
         )
 
         # 3. Save Image to a distinct output filename

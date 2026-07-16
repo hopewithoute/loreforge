@@ -37,7 +37,6 @@ class Settings(BaseSettings):
     frontend_dist: Path = Path("../frontend/dist")
 
 
-
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
