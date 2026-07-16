@@ -5,10 +5,11 @@ import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import globals from "globals";
 import tseslint from "typescript-eslint";
+import tailwindCanonical from "eslint-plugin-tailwind-canonical-classes";
 
 export default tseslint.config(
   {
-    ignores: ["dist/**", "node_modules/**"],
+    ignores: ["dist/**", "node_modules/**", "src/api/**", "orval.config.ts"],
   },
   {
     files: ["**/*.{ts,tsx}"],
@@ -25,6 +26,7 @@ export default tseslint.config(
       "jsx-a11y": jsxA11y,
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
+      "tailwind-canonical-classes": tailwindCanonical,
     },
     rules: {
       ...jsxA11y.flatConfigs.recommended.rules,
@@ -39,6 +41,21 @@ export default tseslint.config(
         { checksVoidReturn: { attributes: false } },
       ],
       "no-console": ["warn", { allow: ["warn", "error"] }],
+      "tailwind-canonical-classes/tailwind-canonical-classes": [
+        "warn",
+        { cssPath: "./src/app/styles/global.css" },
+      ],
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["../*"],
+              message: "Use absolute imports (@/...) instead of relative paths (../).",
+            },
+          ],
+        },
+      ],
     },
   },
   {

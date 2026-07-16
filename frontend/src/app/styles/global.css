@@ -1,0 +1,84 @@
+@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,600;1,600&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #f4f3ed;
+  --color-graphite: #1c1c1a;
+  --color-pencil-gray: #7a7a75;
+  --color-red-pencil: #d63c2e;
+  --color-blueprint: #2a5c8b;
+
+  --font-serif: "Playfair Display", serif;
+  --font-mono: "IBM Plex Mono", monospace;
+  --font-caveat: "Caveat", cursive;
+}
+
+:root {
+  --paper: #f4f3ed;
+  --graphite: #1c1c1a;
+  --pencil-gray: #7a7a75;
+  --red-pencil: #d63c2e;
+  --blueprint: #2a5c8b;
+
+  --line-thin: 1px solid var(--graphite);
+  --line-dashed: 1px dashed var(--pencil-gray);
+  --origami-shadow: 4px 4px 0px rgba(28, 28, 26, 0.08);
+  --active-shadow: 2px 2px 0px var(--red-pencil);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--paper);
+  /* Blueprint/Graph paper grid */
+  background-image:
+    linear-gradient(rgba(122, 122, 117, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(122, 122, 117, 0.1) 1px, transparent 1px);
+  background-size: 40px 40px;
+  font-family: "IBM Plex Mono", monospace;
+  color: var(--graphite);
+  display: flex;
+  min-height: 100vh;
+  overflow-x: hidden;
+  color-scheme: light;
+}
+
+:focus-visible {
+  outline: 1px solid var(--red-pencil);
+  outline-offset: 3px;
+}
+
+/* Base utility overrides for origami style */
+* {
+  border-radius: 0 !important; /* Force origami sharp corners globally */
+}
+
+/* App Layout Container */
+.app-container {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .app-container {
+    flex-direction: column;
+  }
+}
+
+/* Custom Scrollbar for drafting panel */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--pencil-gray);
+}
+
+/* Horizontal scrollbar for track cards — hidden, custom slider used instead */
+.horizontal-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  scroll-behavior: smooth;
+}
+.horizontal-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
