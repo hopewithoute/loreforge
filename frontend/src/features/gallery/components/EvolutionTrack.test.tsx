@@ -22,15 +22,16 @@ vi.mock("./SiblingDeck", () => ({
 // Mock scrolling since jsdom doesn't support real layout scrolling well
 window.HTMLElement.prototype.scrollTo = vi.fn();
 
-const createAsset = (id: string, status: string = "success"): Asset => ({
-  id,
-  prompt: "Prompt",
-  category: "character",
-  style: "concept_art",
-  status: status as Asset["status"],
-  user_id: "user-123",
-  created_at: new Date().toISOString(),
-} as unknown as Asset);
+const createAsset = (id: string, status: string = "success"): Asset =>
+  ({
+    id,
+    prompt: "Prompt",
+    category: "character",
+    style: "concept_art",
+    status: status as Asset["status"],
+    user_id: "user-123",
+    created_at: new Date().toISOString(),
+  }) as unknown as Asset;
 
 describe("EvolutionTrack", () => {
   it("propagates isTrackPending=true to ALL descendants if ANY node is pending", () => {

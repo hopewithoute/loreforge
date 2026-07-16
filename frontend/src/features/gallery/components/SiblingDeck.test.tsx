@@ -10,15 +10,16 @@ vi.mock("./CanvasCard", () => ({
   ),
 }));
 
-const createAsset = (id: string, prompt: string): Asset => ({
-  id,
-  prompt,
-  category: "character",
-  style: "concept_art",
-  status: "success",
-  user_id: "user-123",
-  created_at: new Date().toISOString(),
-} as unknown as Asset);
+const createAsset = (id: string, prompt: string): Asset =>
+  ({
+    id,
+    prompt,
+    category: "character",
+    style: "concept_art",
+    status: "success",
+    user_id: "user-123",
+    created_at: new Date().toISOString(),
+  }) as unknown as Asset;
 
 describe("SiblingDeck", () => {
   it("does not render pagination arrows if there is only 1 sibling", () => {

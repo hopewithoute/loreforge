@@ -31,6 +31,8 @@ jobs:
       - name: Type Check
         run: uv run pyright
       - name: Run Tests
+        env:
+          PYTHONPATH: .
         run: uv run python -m pytest tests/ -v
 
   frontend-checks:
@@ -54,3 +56,5 @@ jobs:
         run: npm run typecheck
       - name: Build
         run: npm run build
+      - name: Run Tests
+        run: npm run test -- --run

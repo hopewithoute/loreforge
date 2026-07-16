@@ -1,45 +1,70 @@
 # LoreForge
 
-LoreForge is an assessment-ready game concept image generator built with FastAPI, Vite, React, and Cloudflare Workers AI.
+LoreForge is an game concept image generator built with FastAPI, Vite, React, and Cloudflare Workers AI.
 
 ## Quick Start (Under 15 Minutes)
 
 ### 1. Prerequisites
-- [uv](https://github.com/astral-sh/uv) (for fast Python package management)
-- Node.js & npm (for the frontend)
+- **Python**: Use [uv](https://github.com/astral-sh/uv) (for ultra-fast Python package management).
+- **Node.js**: v18+ and `npm` (for the frontend).
 
-### 2. Environment Setup
+### 2. Environment Setup & Cloudflare Credentials
+LoreForge uses Cloudflare's free Workers AI tier for image generation.
+1. Go to your [Cloudflare Dashboard](https://dash.cloudflare.com) and find your **Account ID** (in the URL or right sidebar of the dashboard).
+2. Go to **My Profile > API Tokens** and create a token using the **Workers AI** template.
+
 Create a `.env` file in the `backend` directory based on `.env.example`:
 
 ```bash
 cd backend
 cp .env.example .env
 ```
-Edit `backend/.env` and replace `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` with your real Cloudflare credentials.
-
-### 3. Initialize the Database
-LoreForge uses SQLite and Alembic for migrations.
-```bash
-uv sync
-uv run alembic upgrade head
+Edit `backend/.env` and insert your Cloudflare credentials:
+```env
+CLOUDFLARE_ACCOUNT_ID="your_account_id_here"
+CLOUDFLARE_API_TOKEN="your_api_token_here"
 ```
 
-### 4. Run Development Servers
+### 3. Backend Setup & Database Initialization
+LoreForge uses SQLite and Alembic for migrations. From the project root:
+```bash
+cd backend
+uv sync                     # Install backend dependencies
+uv run alembic upgrade head # Run database migrations
+cd ..
+```
+
+### 4. Frontend Setup
+Install the necessary React/Vite dependencies:
+```bash
+cd frontend
+npm install                 # Install frontend dependencies
+cd ..
+```
+
+### 5. Run Development Servers
 Use the provided script to start both the FastAPI backend and Vite frontend simultaneously:
 ```bash
-cd ..
-./dev.sh
+bash dev.sh
 ```
 
 - **Frontend:** http://localhost:5173
 - **Backend API Docs:** http://localhost:8000/docs
-- **Health Check:** http://localhost:8000/api/health
 
-## Architecture
-- **Backend:** FastAPI, SQLAlchemy (SQLite), Pydantic, Pillow, httpx. Background tasks are used for asynchronous AI generation to prevent blocking the main event loop.
-- **Frontend:** React, Vite, TypeScript, Tailwind CSS.
+---
 
-## Limitations & Design Decisions
-- **In-Process Jobs:** The backend uses `FastAPI.BackgroundTasks` for asynchronous image generation. This is an intentional MVP design choice to minimize dependencies. However, if the server restarts while an asset is `pending`, the job will be lost. To mitigate this, stale pending assets are automatically reconciled and marked as `failed` upon startup.
-- **Anonymous Ownership:** The application relies on an anonymous `session_id` stored in an HttpOnly cookie to scope assets. This is not secure authentication, but it fulfills the assessment's isolation requirement.
-- **Media Serving:** Generated images in `/media` are currently publicly accessible to anyone who knows the exact filename.
+## Testing & Quality Assurance
+LoreForge is strictly tested to guarantee reliability. 
+To verify system integrity locally:
+
+**Frontend Tests (Vitest + JSDom):**
+```bash
+cd frontend
+npm run test
+```
+
+**Backend Tests (Pytest):**
+```bash
+cd backend
+uv run pytest
+```

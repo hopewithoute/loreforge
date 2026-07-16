@@ -79,7 +79,7 @@ describe("GeneratorForm", () => {
           prompt: "A brave knight",
           category: "character",
           style: "concept_art",
-        })
+        }),
       );
     });
   });
@@ -91,7 +91,7 @@ describe("GeneratorForm", () => {
         <FormWrapper>
           <GeneratorForm onSubmit={mockMutate} isPending={false} />
         </FormWrapper>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     // Initial styles
@@ -115,13 +115,20 @@ describe("GeneratorForm", () => {
           prompt: "",
           category: "character",
           style: "concept_art",
-          evolveTarget: null
-        }
+          evolveTarget: null,
+        },
       });
 
       // Force it into evolve mode
       useEffect(() => {
-        methods.setValue("evolveTarget", { id: "parent-123", prompt: "Parent prompt", category: "character", style: "concept_art", generated_image_path: null, reference_image_path: null });
+        methods.setValue("evolveTarget", {
+          id: "parent-123",
+          prompt: "Parent prompt",
+          category: "character",
+          style: "concept_art",
+          generated_image_path: null,
+          reference_image_path: null,
+        });
       }, [methods]);
 
       return <FormProvider {...methods}>{children}</FormProvider>;
@@ -132,7 +139,7 @@ describe("GeneratorForm", () => {
         <EvolveWrapper>
           <GeneratorForm onSubmit={mockMutate} isPending={false} />
         </EvolveWrapper>
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     // Wait for the button to appear since it's set in useEffect
@@ -144,7 +151,9 @@ describe("GeneratorForm", () => {
 
     // The cancel button should disappear because evolveTarget is reset to null
     await waitFor(() => {
-      expect(screen.queryByRole("button", { name: /CANCEL EVOLVE/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /CANCEL EVOLVE/i }),
+      ).not.toBeInTheDocument();
     });
   });
 });

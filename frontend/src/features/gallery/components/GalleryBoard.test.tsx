@@ -20,17 +20,18 @@ const createAsset = (
   id: string,
   parent_id: string | null = null,
   sibling_id: string | null = null,
-): Asset => ({
-  id,
-  parent_id,
-  sibling_id,
-  prompt: "Prompt",
-  category: "character",
-  style: "concept_art",
-  status: "success",
-  user_id: "user-123",
-  created_at: new Date().toISOString(),
-} as unknown as Asset);
+): Asset =>
+  ({
+    id,
+    parent_id,
+    sibling_id,
+    prompt: "Prompt",
+    category: "character",
+    style: "concept_art",
+    status: "success",
+    user_id: "user-123",
+    created_at: new Date().toISOString(),
+  }) as unknown as Asset;
 
 describe("GalleryBoard - Tree Builder", () => {
   it("builds the correct evolution tree with siblings and children", () => {

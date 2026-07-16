@@ -66,7 +66,7 @@ export function GeneratorPanel() {
           <h1
             className={cn(
               "m-0 font-['Playfair_Display',serif] text-[2.2rem]",
-              "leading-none font-semibold text-(--graphite) italic",
+              "leading-none font-semibold text-(--graphite)",
             )}
           >
             LoreForge
@@ -76,7 +76,7 @@ export function GeneratorPanel() {
               "mt-1 text-[0.7rem] tracking-[2px] text-(--pencil-gray) uppercase",
             )}
           >
-            Art Dept. Station
+            Visualize your Idea
           </p>
         </div>
       </div>
