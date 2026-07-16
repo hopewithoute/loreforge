@@ -11,7 +11,9 @@ def test_default_env_files_cover_repo_and_backend_roots() -> None:
     assert BACKEND_ROOT == REPO_ROOT / "backend"
 
 
-def test_settings_loads_values_from_dotenv_file(tmp_path: Path) -> None:
+def test_settings_loads_values_from_dotenv_file(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.delenv("AI_TIMEOUT_SECONDS", raising=False)
     env_file = tmp_path / ".env"
     env_file.write_text(
         "DATABASE_URL=sqlite:///./data/from-env.sqlite3\nAI_TIMEOUT_SECONDS=42\n",

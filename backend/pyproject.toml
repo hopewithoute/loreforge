@@ -22,6 +22,7 @@ entrypoint = "main:app"
 dev = [
     "pyright>=1.1,<2",
     "pytest>=8.4,<10",
+    "pytest-cov>=7.1.0",
     "ruff>=0.15,<1",
 ]
 

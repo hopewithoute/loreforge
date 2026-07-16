@@ -142,6 +142,13 @@ class AssetService:
         descendant_ids = get_descendants(asset_id)
         all_ids_to_delete = [asset_id, *descendant_ids]
 
+        # Ground Truth Rule: Lineage Lockdown
+        # Cannot delete a lineage if any of its members is currently generating (pending)
+        stmt = select(Asset.status).where(Asset.id.in_(all_ids_to_delete))
+        statuses = self._db.scalars(stmt).all()
+        if "pending" in statuses:
+            raise ValueError("Cannot delete lineage with pending generations")
+
         try:
             # Delete from DB
             for d_id in reversed(all_ids_to_delete):

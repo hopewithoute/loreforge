@@ -75,7 +75,7 @@ export function EvolutionTrack({ tree }: EvolutionTrackProps) {
   const isDown = useRef(false);
   const startX = useRef(0);
   const scrollLeftRef = useRef(0);
-  
+
   // Custom slider state
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showSlider, setShowSlider] = useState(false);

@@ -4,7 +4,7 @@ import type { Asset } from "@/features/generator/types";
 import { Logo } from "@/components/Logo";
 
 /**
- * Represents a node in the evolution tree, where a node is a group of sibling assets 
+ * Represents a node in the evolution tree, where a node is a group of sibling assets
  * (assets that share the same parent or are root alternatives).
  */
 export interface EvolutionNode {
@@ -15,14 +15,14 @@ export interface EvolutionNode {
 
 /**
  * Builds a recursive tree structure representing the evolution lineage.
- * 
+ *
  * @param root The root asset of this particular track (has no parent/sibling).
  * @param allItems The flat list of all assets fetched from the server.
  * @returns A hierarchical `EvolutionNode` tree where each node contains siblings and their children.
  */
 function buildEvolutionTree(root: Asset, allItems: Asset[]): EvolutionNode {
   const siblingGroups = new Map<string, Asset[]>();
-  
+
   // Group all assets by their sibling_id. If no sibling_id, the asset is its own group.
   allItems.forEach((asset) => {
     const groupId = asset.sibling_id || asset.id;

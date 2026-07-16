@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.core.errors import (
     ProviderBrokenResponseError,
     ProviderConfigError,
+    ProviderInvalidPromptError,
     ProviderRateLimitError,
     ProviderUnavailableError,
 )
@@ -148,7 +149,7 @@ async def test_generate_http_errors(adapter, monkeypatch):
         (401, ProviderConfigError),
         (403, ProviderConfigError),
         (429, ProviderRateLimitError),
-        (400, ProviderUnavailableError),
+        (400, ProviderInvalidPromptError),
         (500, ProviderUnavailableError),
     ]
 
