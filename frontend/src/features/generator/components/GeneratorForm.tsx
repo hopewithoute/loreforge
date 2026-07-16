@@ -133,13 +133,15 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
       <CategorySelector
         value={watchCategory}
         onChange={(cat) => setValue("category", cat)}
-        disabled={isPending}
+        disabled={isPending || !!evolveTarget}
+        isLocked={!!evolveTarget}
       />
 
       <StyleSelector
         value={watchStyle}
         onChange={(style) => setValue("style", style)}
-        disabled={isPending}
+        disabled={isPending || !!evolveTarget}
+        isLocked={!!evolveTarget}
       />
 
       <PromptField {...register("prompt")} disabled={isPending} />

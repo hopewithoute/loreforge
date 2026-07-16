@@ -51,7 +51,8 @@ export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
       setValue("fileName", "[ Evolving Parent ]");
       setValue("previewUrl", getMediaUrl(asset.generated_image_path) || null);
     } else {
-      setValue("existing_reference_id", asset.reference_image_path ? asset.id : "");
+      const hasReference = !!(asset.reference_image_path || asset.prepared_input_path);
+      setValue("existing_reference_id", hasReference ? asset.id : "");
       setValue("sibling_id", mode === "regen" ? asset.id : "");
       setValue("evolveTarget", null);
 
@@ -59,6 +60,9 @@ export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
         setValue("previewUrl", getMediaUrl(asset.reference_image_path));
         const defaultName = `[Restored] ${asset.reference_image_path.split("/").pop() || "previous_sketch.png"}`;
         setValue("fileName", mode === "recover" ? "[ Existing Reference ]" : defaultName);
+      } else if (asset.prepared_input_path) {
+        setValue("previewUrl", getMediaUrl(asset.prepared_input_path));
+        setValue("fileName", "[ Restored Evolution Parent ]");
       } else {
         setValue("previewUrl", null);
         setValue("fileName", null);

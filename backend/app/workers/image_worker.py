@@ -68,22 +68,16 @@ async def _process_generation(
                 is_evolve_mode = True
                 strength = 0.70
 
-                # Retrieve the historical sliding window (up to 4)
-                current_node = asset
-                while current_node and len(reference_images) < 4:
-                    if current_node.prepared_input_path:
-                        try:
-                            img_bytes = cast(
-                                bytes, storage.cat_file(current_node.prepared_input_path)
-                            )
-                            reference_images.append(img_bytes)
-                        except FileNotFoundError:
-                            pass
-
-                    if current_node.parent_id:
-                        current_node = service._get_asset_orm(current_node.parent_id, user_id)
-                    else:
-                        break
+                # The asset was prepared in AssetService.evolve_asset, where the parent's
+                # generated image was converted and saved to this asset's prepared_input_path.
+                # We only need this ONE image to forge the next evolutionary step.
+                try:
+                    img_bytes = cast(
+                        bytes, storage.cat_file(asset.prepared_input_path)
+                    )
+                    reference_images.append(img_bytes)
+                except FileNotFoundError:
+                    pass
             else:
                 # It came from a user sketch (Create/Regenerate)
                 strength = 0.85

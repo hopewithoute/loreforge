@@ -6,16 +6,18 @@ interface CategorySelectorProps {
   value: AssetCategory;
   onChange: (val: AssetCategory) => void;
   disabled: boolean;
+  isLocked?: boolean;
 }
 
-export function CategorySelector({ value, onChange, disabled }: CategorySelectorProps) {
+export function CategorySelector({ value, onChange, disabled, isLocked }: CategorySelectorProps) {
   return (
     <div className="form-group mb-6">
       <label
         htmlFor="category_group"
-        className="mb-2.5 block text-xs font-semibold tracking-[1px] text-(--pencil-gray) uppercase"
+        className="mb-2.5 flex items-center gap-2 text-xs font-semibold tracking-[1px] text-(--pencil-gray) uppercase"
       >
         Subject Category
+        {isLocked && <span title="Locked to parent lineage" className="text-[10px]">🔒</span>}
       </label>
       <div id="category_group" className="flex flex-wrap gap-2">
         {CATEGORY_OPTIONS.map((opt) => (
@@ -44,16 +46,18 @@ interface StyleSelectorProps {
   value: AssetStyle;
   onChange: (val: AssetStyle) => void;
   disabled: boolean;
+  isLocked?: boolean;
 }
 
-export function StyleSelector({ value, onChange, disabled }: StyleSelectorProps) {
+export function StyleSelector({ value, onChange, disabled, isLocked }: StyleSelectorProps) {
   return (
     <div className="form-group mb-6">
       <label
         htmlFor="style_group"
-        className="mb-2.5 block text-xs font-semibold tracking-[1px] text-(--pencil-gray) uppercase"
+        className="mb-2.5 flex items-center gap-2 text-xs font-semibold tracking-[1px] text-(--pencil-gray) uppercase"
       >
         Art Style
+        {isLocked && <span title="Locked to parent lineage" className="text-[10px]">🔒</span>}
       </label>
       <div id="style_group" className="flex flex-wrap gap-2">
         {STYLE_OPTIONS.map((opt) => (
