@@ -239,7 +239,7 @@ export function CanvasCard({ asset: initialAsset, isTrackPending }: CanvasCardPr
           const isConfirmed = await confirm(
             "This action will completely remove this asset and recursively delete all of its descendants from existence. This action cannot be undone.",
             "Prune Branch?",
-            "Prune ⌫",
+            "Prune",
           );
           if (isConfirmed) {
             deleteAsset.mutate({ assetId: asset.id });
