@@ -7,7 +7,7 @@ export function Logo({ className, ...props }: SVGProps<SVGSVGElement>) {
       {...props}
       xmlns="http://www.w3.org/2000/svg"
       xmlnsXlink="http://www.w3.org/1999/xlink"
-      viewBox="0 0 1024 1024"
+      viewBox="210 180 600 600"
     >
       <path
         fill="#2E547B"
