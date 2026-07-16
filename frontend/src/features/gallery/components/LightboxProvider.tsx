@@ -76,16 +76,18 @@ export function LightboxProvider({ children }: { children: ReactNode }) {
         className={cn(
           "fixed inset-0 z-50 flex items-center justify-center p-5 md:p-10",
           "bg-paper/95 backdrop-blur-sm transition-opacity duration-300",
-          state.isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          state.isOpen
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0",
         )}
         onClick={closeLightbox} // Click outside to close
       >
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
         <div
           className={cn(
-            "relative flex max-h-full max-w-5xl flex-col bg-paper p-3 border-2 border-graphite",
+            "relative flex max-h-full max-w-5xl flex-col border-2 border-graphite bg-paper p-3",
             "shadow-[8px_8px_0px_rgba(28,28,26,0.1)] transition-transform duration-300",
-            state.isOpen ? "scale-100 translate-y-0" : "scale-95 translate-y-4"
+            state.isOpen ? "translate-y-0 scale-100" : "translate-y-4 scale-95",
           )}
           onClick={(e) => e.stopPropagation()} // Prevent click inside from closing
         >
