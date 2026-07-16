@@ -1,6 +1,9 @@
-import type { Asset } from "../../generator/types";
-import { useAssetStatus } from "../../generator/api/useAssetStatus";
-import { useRetryAsset } from "../../generator/api/useRetryAsset";
+import { useFormContext } from "react-hook-form";
+import type { Asset, GeneratorFormValues } from "@/features/generator/types";
+import { useAssetStatus } from "@/features/generator/api/useAssetStatus";
+import { useRetryAsset } from "@/features/generator/api/useRetryAsset";
+import { useDeleteAsset } from "@/features/generator/api/useDeleteAsset";
+import { cn, extractError, getMediaUrl } from "@/lib/utils";
 
 interface CanvasCardProps {
   asset: Asset;
@@ -8,118 +11,206 @@ interface CanvasCardProps {
 
 export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
   // If the asset is still pending, we poll for its status. Otherwise we use the provided one.
-  const { data: polledAsset } = useAssetStatus(initialAsset.status === "pending" ? initialAsset.id : null);
+  const { data: polledAsset } = useAssetStatus(
+    initialAsset.status === "pending" ? initialAsset.id : null,
+  );
   const asset = polledAsset || initialAsset;
   const retryAsset = useRetryAsset();
+  const deleteAsset = useDeleteAsset();
+
+  // Access global form context (provided in App.tsx)
+  // This allows the CanvasCard to "reach over" to the left panel and update its inputs.
+  const { setValue } = useFormContext<GeneratorFormValues>();
 
   const handleRecover = () => {
-    retryAsset.mutate({ asset_id: asset.id });
+    retryAsset.mutate(
+      { assetId: asset.id },
+      {
+        onError: (error: unknown) => {
+          alert(`Failed to recover: ${extractError(error, "Unknown error")}`);
+        },
+      },
+    );
   };
 
-  const handleRegenerate = () => {
-    const form = document.querySelector("form");
-    if (form) {
-      const promptInput = form.querySelector('textarea[name="prompt"]') as HTMLTextAreaElement;
-      if (promptInput) {
-        promptInput.value = asset.prompt;
+  /**
+   * Helper function to fill the left panel (GeneratorForm) with data from this specific asset.
+   * Based on the `mode`, it configures the form either to completely regenerate the asset,
+   * recover an existing sketch, or evolve the image further.
+   */
+  const populateForm = (mode: "regen" | "recover" | "evolve") => {
+    // 1. Basic properties are always restored
+    setValue("prompt", asset.prompt);
+    setValue("category", asset.category);
+    setValue("style", asset.style);
+
+    if (mode === "evolve") {
+      setValue("existing_reference_id", "");
+      setValue("sibling_id", "");
+      setValue("evolveTarget", asset);
+      setValue("fileName", "[ Evolving Parent ]");
+      setValue("previewUrl", getMediaUrl(asset.generated_image_path) || null);
+    } else {
+      setValue("existing_reference_id", asset.reference_image_path ? asset.id : "");
+      setValue("sibling_id", mode === "regen" ? asset.id : "");
+      setValue("evolveTarget", null);
+
+      if (asset.reference_image_path) {
+        setValue("previewUrl", getMediaUrl(asset.reference_image_path));
+        const defaultName = `[Restored] ${asset.reference_image_path.split("/").pop() || "previous_sketch.png"}`;
+        setValue("fileName", mode === "recover" ? "[ Existing Reference ]" : defaultName);
+      } else {
+        setValue("previewUrl", null);
+        setValue("fileName", null);
       }
-      
-      const catBtn = form.querySelector(`button[data-category="${asset.category}"]`) as HTMLButtonElement;
-      if (catBtn) catBtn.click();
-      
-      const styleBtn = form.querySelector(`button[data-style="${asset.style}"]`) as HTMLButtonElement;
-      if (styleBtn) styleBtn.click();
-
-      const hiddenRefInput = form.querySelector('#hidden_existing_ref') as HTMLInputElement;
-      if (hiddenRefInput) {
-        // Only set the existing reference if the asset actually had a reference image
-        hiddenRefInput.value = asset.reference_image_path ? asset.id : "";
-        
-        const hiddenSiblingInput = form.querySelector('#hidden_sibling_id') as HTMLInputElement;
-        if (hiddenSiblingInput) {
-          hiddenSiblingInput.value = asset.id;
-        }
-
-        if (asset.reference_image_path) {
-          const filename = asset.reference_image_path.split('/').pop() || "previous_sketch.png";
-          const url = asset.reference_image_path.startsWith('/') 
-             ? asset.reference_image_path 
-             : `/media/${asset.reference_image_path}`;
-             
-          const event = new CustomEvent("restore-reference", { 
-            detail: { filename: `[Restored] ${filename}`, url } 
-          });
-          form.dispatchEvent(event);
-        } else {
-          // If the asset has no reference image, clear any existing reference in the form
-          const event = new CustomEvent("restore-reference", { 
-            detail: { filename: null, url: null } 
-          });
-          form.dispatchEvent(event);
-        }
-      }
-
-      form.scrollIntoView({ behavior: "smooth" });
     }
+
+    setValue("fileInputResetKey", Date.now());
+    document.getElementById("generator-form")?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const handleRegenerate = () => populateForm("regen");
+  const handleRecoverForm = () => populateForm("recover");
+  const handleEvolve = () => populateForm("evolve");
 
   return (
-    <div className="min-w-[280px] max-w-[280px] bg-[var(--paper)] border border-[var(--graphite)] p-[10px] flex flex-col gap-[15px] relative shrink-0 shadow-[3px_3px_0px_rgba(0,0,0,0.05)] transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] hover:-translate-y-1 hover:shadow-[10px_10px_20px_rgba(0,0,0,0.05)] hover:bg-[#FFFFFF] hover:z-10 group snap-start">
+    <div
+      className={cn(
+        "group relative flex max-w-70 min-w-70 shrink-0 snap-start flex-col gap-3.75 p-2.5",
+        "border border-(--graphite) bg-(--paper) shadow-[3px_3px_0px_rgba(0,0,0,0.05)]",
+        "transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)]",
+        "hover:z-10 hover:-translate-y-1 hover:bg-[#FFFFFF] hover:shadow-[10px_10px_20px_rgba(0,0,0,0.05)]",
+      )}
+    >
       {/* Origami fold corner */}
-      <div className="absolute top-0 right-0 border-solid border-b-[15px] border-l-[15px] border-b-transparent border-l-transparent border-t-[#E0DFD8] border-r-[#E0DFD8] transition-colors duration-300 group-hover:border-t-[#FFFFFF] group-hover:border-r-[#FFFFFF]" />
+      <div
+        className={cn(
+          "absolute top-0 right-0 border-b-15 border-l-15 border-solid",
+          "border-t-[#E0DFD8] border-r-[#E0DFD8] border-b-transparent border-l-transparent",
+          "transition-colors duration-300 group-hover:border-t-[#FFFFFF] group-hover:border-r-[#FFFFFF]",
+        )}
+      />
 
-      <div className="w-full aspect-square border border-[var(--graphite)] flex items-center justify-center overflow-hidden cursor-zoom-in bg-[#FFFFFF] relative">
+      <div
+        className={cn(
+          "relative flex aspect-square w-full cursor-zoom-in items-center justify-center",
+          "overflow-hidden border border-(--graphite) bg-[#FFFFFF]",
+        )}
+      >
         {/* Crosshairs */}
-        <div className="absolute bg-[rgba(255,255,255,0.7)] z-[2] w-[10px] h-[1px] top-[10px] left-[-5px]" />
-        <div className="absolute bg-[rgba(255,255,255,0.7)] z-[2] w-[1px] h-[10px] top-[-5px] left-[10px]" />
+        <div className="absolute top-2.5 -left-1.25 z-2 h-px w-2.5 bg-[rgba(255,255,255,0.7)]" />
+        <div className="absolute -top-1.25 left-2.5 z-2 h-2.5 w-px bg-[rgba(255,255,255,0.7)]" />
 
         {asset.status === "pending" ? (
           <div className="flex flex-col items-center p-4 text-center">
-            <div className="w-8 h-8 border-2 border-dashed border-[var(--pencil-gray)] rounded-full animate-spin mb-2" />
-            <span className="font-mono text-xs text-[var(--pencil-gray)]">Forging asset...</span>
+            <div className="mb-2 h-8 w-8 animate-spin rounded-full border-2 border-dashed border-(--pencil-gray)" />
+            <span className="font-mono text-xs text-(--pencil-gray)">
+              Forging asset...
+            </span>
           </div>
         ) : asset.status === "failed" ? (
-          <div className="flex flex-col items-center p-4 text-center text-[var(--red-pencil)]">
-            <span className="font-mono text-sm mb-2 font-bold">{asset.error_code || "RENDER_FAILED"}</span>
-            <span className="font-mono text-xs opacity-80 line-clamp-4">{asset.error_message || "Unknown anomaly detected"}</span>
+          <div className="flex flex-col items-center p-4 text-center text-(--red-pencil)">
+            <span className="mb-2 font-mono text-sm font-bold">
+              {asset.error_code || "RENDER_FAILED"}
+            </span>
+            <span className="line-clamp-4 font-mono text-xs opacity-80">
+              {asset.error_message || "Unknown anomaly detected"}
+            </span>
           </div>
         ) : (
           <img
-            src={asset.generated_image_path?.startsWith('/') ? asset.generated_image_path : `/media/${asset.generated_image_path}`}
+            src={getMediaUrl(asset.generated_image_path)}
             alt={asset.prompt}
-            className="w-full h-full object-cover transition-transform duration-400 ease-in group-hover:scale-105 contrast-105 saturate-90"
+            className={cn(
+              "h-full w-full object-cover contrast-105 saturate-90",
+              "transition-transform duration-400 ease-in group-hover:scale-105",
+            )}
           />
         )}
       </div>
 
-      <div className="flex flex-col gap-2 relative z-10">
-        <p className="font-['Caveat',_cursive] text-[1.4rem] leading-[1.2] text-[var(--blueprint)] m-0 line-clamp-3">
+      <div className="relative z-10 flex flex-col gap-2">
+        <p className="m-0 line-clamp-3 font-['Caveat',cursive] text-[1.4rem] leading-[1.2] text-(--blueprint)">
           {asset.prompt || "—"}
         </p>
-        <div className="flex gap-2 font-mono text-[0.65rem] uppercase tracking-[1px] text-[var(--pencil-gray)]">
-          <span className="px-2 py-1 bg-[rgba(28,28,26,0.05)] border border-[rgba(28,28,26,0.1)]">
+        <div className="flex gap-2 font-mono text-[0.65rem] tracking-[1px] text-(--pencil-gray) uppercase">
+          <span className="border border-[rgba(28,28,26,0.1)] bg-[rgba(28,28,26,0.05)] px-2 py-1">
             {asset.category}
           </span>
-          <span className="px-2 py-1 bg-[rgba(42,92,139,0.05)] border border-[rgba(42,92,139,0.1)] text-[var(--blueprint)]">
+          <span className="border border-[rgba(42,92,139,0.1)] bg-[rgba(42,92,139,0.05)] px-2 py-1 text-(--blueprint)">
             {asset.style}
           </span>
         </div>
         {asset.status === "failed" ? (
-          <button
-            onClick={handleRecover}
-            disabled={retryAsset.isPending}
-            className="w-full bg-[rgba(189,49,36,0.05)] border border-[var(--red-pencil)] text-[var(--red-pencil)] p-[6px] font-mono cursor-pointer text-[0.75rem] uppercase tracking-[1px] transition-all duration-200 hover:bg-[var(--red-pencil)] hover:text-[var(--paper)] disabled:opacity-50"
-          >
-            {retryAsset.isPending ? "Recovering..." : "Recover ↺"}
-          </button>
+          <div className="flex flex-col gap-2">
+            {asset.error_code !== "INVALID_PROMPT" && (
+              <button
+                type="button"
+                onClick={handleRecover}
+                disabled={retryAsset.isPending}
+                className={cn(
+                  "w-full cursor-pointer border border-(--red-pencil) bg-[rgba(189,49,36,0.05)] p-1.5",
+                  "font-mono text-[0.75rem] tracking-[1px] text-(--red-pencil) uppercase",
+                  "transition-all duration-200 hover:bg-(--red-pencil) hover:text-(--paper) disabled:opacity-50",
+                )}
+              >
+                {retryAsset.isPending ? "Recovering..." : "Recover ↺"}
+              </button>
+            )}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleRecoverForm}
+                disabled={retryAsset.isPending || deleteAsset.isPending}
+                className={cn(
+                  "flex-1 cursor-pointer border border-(--graphite) bg-[rgba(28,28,26,0.05)] p-1.5",
+                  "font-mono text-[0.75rem] tracking-[1px] text-(--graphite) uppercase",
+                  "transition-all duration-200 hover:bg-(--graphite) hover:text-(--paper) disabled:opacity-50",
+                )}
+              >
+                Recover ↺
+              </button>
+              <button
+                type="button"
+                onClick={() => deleteAsset.mutate({ assetId: asset.id })}
+                disabled={retryAsset.isPending || deleteAsset.isPending}
+                className={cn(
+                  "flex-1 cursor-pointer border border-(--red-pencil) bg-transparent p-1.5",
+                  "font-mono text-[0.75rem] tracking-[1px] text-(--red-pencil) uppercase",
+                  "transition-all duration-200 hover:bg-(--red-pencil) hover:text-(--paper) disabled:opacity-50",
+                )}
+              >
+                {deleteAsset.isPending ? "..." : "Trash ⌫"}
+              </button>
+            </div>
+          </div>
         ) : (
-          <button
-            onClick={handleRegenerate}
-            disabled={asset.status !== "success"}
-            className="w-full bg-transparent border border-[var(--graphite)] text-[var(--graphite)] p-[6px] font-mono cursor-pointer text-[0.75rem] uppercase tracking-[1px] transition-all duration-200 hover:bg-[var(--graphite)] hover:text-[var(--paper)] disabled:opacity-50"
-          >
-            Regenerate ✎
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleRegenerate}
+              disabled={asset.status !== "success"}
+              className={cn(
+                "flex-1 cursor-pointer border border-(--graphite) bg-transparent p-1.5",
+                "font-mono text-[0.75rem] tracking-[1px] text-(--graphite) uppercase",
+                "transition-all duration-200 hover:bg-(--graphite) hover:text-(--paper) disabled:opacity-50",
+              )}
+            >
+              REGEN ✎
+            </button>
+            <button
+              type="button"
+              onClick={handleEvolve}
+              disabled={asset.status !== "success"}
+              className={cn(
+                "flex-1 cursor-pointer border border-(--blueprint) bg-(--paper) p-1.5",
+                "font-mono text-[0.75rem] tracking-[1px] text-(--blueprint) uppercase",
+                "transition-all duration-200 hover:bg-(--blueprint) hover:text-(--paper) disabled:opacity-50",
+              )}
+            >
+              EVOLVE ➔
+            </button>
+          </div>
         )}
       </div>
     </div>

@@ -1,17 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { client } from "../../../shared/api/base";
+import { useListAssets } from "@/api/endpoints/assets/assets";
+
+import type { AssetRead } from "@/api/model";
 
 export function useGallery() {
-  return useQuery({
-    queryKey: ["gallery"],
-    queryFn: async () => {
-      const { data, error } = await client.GET("/api/assets/", {});
-
-      if (error) {
-        throw new Error("Failed to fetch gallery");
-      }
-
-      return data;
-    },
-  });
+  const query = useListAssets();
+  return {
+    ...query,
+    data: query.data ? (query.data.data as AssetRead[]) : undefined,
+  };
 }

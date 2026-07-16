@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CanvasCard } from "./CanvasCard";
-import type { Asset } from "../../generator/types";
+import { cn } from "@/lib/utils";
+import type { Asset } from "@/features/generator/types";
 
 interface SiblingDeckProps {
   siblings: Asset[];
@@ -11,26 +12,37 @@ export function SiblingDeck({ siblings }: SiblingDeckProps) {
 
   if (siblings.length === 0) return null;
 
+  // A SiblingDeck receives an array of assets that share the same "parent".
+  // This usually happens when a user clicks "Regenerate" on an existing asset.
+  // We stack them like a deck of cards and allow the user to paginate through them.
+
   // Ensure index is valid in case siblings array shrinks (shouldn't happen, but safe)
   const safeIndex = Math.min(currentIndex, siblings.length - 1);
   const currentAsset = siblings[safeIndex];
   const hasMultiple = siblings.length > 1;
 
   const goNext = () => setCurrentIndex((i) => (i + 1) % siblings.length);
-  const goPrev = () => setCurrentIndex((i) => (i - 1 + siblings.length) % siblings.length);
+  const goPrev = () =>
+    setCurrentIndex((i) => (i - 1 + siblings.length) % siblings.length);
 
   return (
     <div className="relative flex flex-col gap-3">
       {/* Visual Deck Stack Effect (background papers) */}
       {hasMultiple && (
         <>
-          <div 
-            className="absolute top-2 left-2 w-full h-[calc(100%-2.5rem)] bg-[var(--paper)] border border-[var(--graphite)] opacity-60 z-0 pointer-events-none transition-transform" 
-            style={{ transform: "rotate(3deg)" }} 
+          <div
+            className={cn(
+              "pointer-events-none absolute top-2 left-2 z-0 h-[calc(100%-2.5rem)] w-full",
+              "border border-(--graphite) bg-(--paper) opacity-60 transition-transform",
+            )}
+            style={{ transform: "rotate(3deg)" }}
           />
-          <div 
-            className="absolute top-1 left-1 w-full h-[calc(100%-2.5rem)] bg-[#f0eee9] border border-[var(--graphite)] opacity-80 z-0 pointer-events-none transition-transform" 
-            style={{ transform: "rotate(-1.5deg)" }} 
+          <div
+            className={cn(
+              "pointer-events-none absolute top-1 left-1 z-0 h-[calc(100%-2.5rem)] w-full",
+              "border border-(--graphite) bg-[#f0eee9] opacity-80 transition-transform",
+            )}
+            style={{ transform: "rotate(-1.5deg)" }}
           />
         </>
       )}
@@ -42,23 +54,28 @@ export function SiblingDeck({ siblings }: SiblingDeckProps) {
 
       {/* Pagination Controls */}
       {hasMultiple && (
-        <div className="flex flex-row items-center justify-between px-2 text-[var(--pencil-gray)] font-mono text-xs z-10 bg-[var(--paper)] border border-[var(--graphite)] py-1 mt-1 drop-shadow-[2px_2px_0_rgba(28,28,26,0.1)]">
-          <button 
+        <div
+          className={cn(
+            "z-10 mt-1 flex flex-row items-center justify-between border border-(--graphite) bg-(--paper) px-2 py-1",
+            "font-mono text-xs text-(--pencil-gray) drop-shadow-[2px_2px_0_rgba(28,28,26,0.1)]",
+          )}
+        >
+          <button
             type="button"
-            onClick={goNext} 
-            className="hover:text-[var(--red-pencil)] px-2 py-1 cursor-pointer font-bold transition-colors"
+            onClick={goNext}
+            className="cursor-pointer px-2 py-1 font-bold transition-colors hover:text-(--red-pencil)"
           >
             &larr; OLDER
           </button>
-          
+
           <span className="tracking-widest">
             {safeIndex + 1} / {siblings.length}
           </span>
-          
-          <button 
+
+          <button
             type="button"
-            onClick={goPrev} 
-            className="hover:text-[var(--red-pencil)] px-2 py-1 cursor-pointer font-bold transition-colors"
+            onClick={goPrev}
+            className="cursor-pointer px-2 py-1 font-bold transition-colors hover:text-(--red-pencil)"
           >
             NEWER &rarr;
           </button>
