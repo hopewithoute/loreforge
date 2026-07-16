@@ -174,32 +174,18 @@ export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
                 {retryAsset.isPending ? "Retrying..." : "RETRY RENDER ↺"}
               </button>
             )}
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleRecoverForm}
-                disabled={retryAsset.isPending || deleteAsset.isPending}
-                className={cn(
-                  "flex-1 cursor-pointer border border-(--graphite) bg-[rgba(28,28,26,0.05)] p-1.5",
-                  "font-mono text-[0.75rem] tracking-[1px] text-(--graphite) uppercase",
-                  "transition-all duration-200 hover:bg-(--graphite) hover:text-(--paper) disabled:opacity-50",
-                )}
-              >
-                REVISE DRAFT ✎
-              </button>
-              <button
-                type="button"
-                onClick={() => deleteAsset.mutate({ assetId: asset.id })}
-                disabled={retryAsset.isPending || deleteAsset.isPending}
-                className={cn(
-                  "flex-1 cursor-pointer border border-(--red-pencil) bg-transparent p-1.5",
-                  "font-mono text-[0.75rem] tracking-[1px] text-(--red-pencil) uppercase",
-                  "transition-all duration-200 hover:bg-(--red-pencil) hover:text-(--paper) disabled:opacity-50",
-                )}
-              >
-                {deleteAsset.isPending ? "..." : "Trash ⌫"}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleRecoverForm}
+              disabled={retryAsset.isPending || deleteAsset.isPending}
+              className={cn(
+                "w-full cursor-pointer border border-(--graphite) bg-[rgba(28,28,26,0.05)] p-1.5",
+                "font-mono text-[0.75rem] tracking-[1px] text-(--graphite) uppercase",
+                "transition-all duration-200 hover:bg-(--graphite) hover:text-(--paper) disabled:opacity-50",
+              )}
+            >
+              REVISE DRAFT ✎
+            </button>
           </div>
         ) : (
           <div className="flex gap-2">
