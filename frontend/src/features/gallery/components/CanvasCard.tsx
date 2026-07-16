@@ -6,7 +6,7 @@ import { useDeleteAsset } from "@/features/generator/api/useDeleteAsset";
 import { useLightbox } from "@/features/gallery/components/LightboxProvider";
 import { useConfirm } from "@/app/ConfirmProvider";
 import { cn, extractError, getMediaUrl } from "@/lib/utils";
-import { RetryIcon, EditIcon, ArrowRightIcon } from "@/components/Icons";
+import { RetryIcon, EditIcon, ArrowRightIcon, TrashIcon } from "@/components/Icons";
 
 interface CanvasCardProps {
   asset: Asset;
@@ -257,7 +257,7 @@ export function CanvasCard({ asset: initialAsset, isTrackPending }: CanvasCardPr
         )}
         title="Prune this asset (and all descendants)"
       >
-        {deleteAsset.isPending ? "..." : "X"}
+        {deleteAsset.isPending ? "..." : <TrashIcon className="h-4 w-4" />}
       </button>
     </div>
   );
