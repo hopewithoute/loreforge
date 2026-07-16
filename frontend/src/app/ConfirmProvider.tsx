@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 type ConfirmFn = (
   message: string,
   title?: string,
-  confirmText?: string,
+  confirmText?: ReactNode,
 ) => Promise<boolean>;
 
 const ConfirmContext = createContext<ConfirmFn | null>(null);
@@ -23,13 +23,13 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [title, setTitle] = useState("Confirm Action");
-  const [confirmText, setConfirmText] = useState("Confirm");
+  const [confirmText, setConfirmText] = useState<ReactNode>("Confirm");
   const [resolver, setResolver] = useState<{ resolve: (value: boolean) => void } | null>(
     null,
   );
 
   const confirm: ConfirmFn = useCallback(
-    (msg: string, titleStr = "Confirm Action", confirmBtn = "Confirm") => {
+    (msg: string, titleStr = "Confirm Action", confirmBtn: ReactNode = "Confirm") => {
       setMessage(msg);
       setTitle(titleStr);
       setConfirmText(confirmBtn);

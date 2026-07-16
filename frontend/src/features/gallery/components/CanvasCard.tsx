@@ -239,7 +239,9 @@ export function CanvasCard({ asset: initialAsset, isTrackPending }: CanvasCardPr
           const isConfirmed = await confirm(
             "This action will completely remove this asset and recursively delete all of its descendants from existence. This action cannot be undone.",
             "Prune Branch?",
-            "Prune",
+            <span className="flex items-center justify-center gap-1.5">
+              PRUNE <TrashIcon className="h-4 w-4" />
+            </span>,
           );
           if (isConfirmed) {
             deleteAsset.mutate({ assetId: asset.id });
@@ -257,7 +259,7 @@ export function CanvasCard({ asset: initialAsset, isTrackPending }: CanvasCardPr
         )}
         title="Prune this asset (and all descendants)"
       >
-        {deleteAsset.isPending ? "..." : <TrashIcon className="h-4 w-4" />}
+        {deleteAsset.isPending ? "..." : "X"}
       </button>
     </div>
   );
