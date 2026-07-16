@@ -100,7 +100,6 @@ def test_evolve_asset_success(client, db_session):
 
     # In Option B, evolve requires the parent to have a generated image.
 
-
     service = AssetService(db_session, get_storage_driver())
     user_id = client.cookies.get("session_id")
 
@@ -108,7 +107,7 @@ def test_evolve_asset_success(client, db_session):
     storage = get_storage_driver()
     fake_image_path = f"assets/{parent_id}/generated_fake.png"
     # 1x1 png
-    fake_png = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\x9cc\xfc\xff\xff\xff\xff\xff\x7f\x00\t\xbe\x02\xfe\x93\x11\x14\x95\x00\x00\x00\x00IEND\xaeB`\x82'
+    fake_png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\x9cc\xfc\xff\xff\xff\xff\xff\x7f\x00\t\xbe\x02\xfe\x93\x11\x14\x95\x00\x00\x00\x00IEND\xaeB`\x82"
     storage.pipe_file(fake_image_path, fake_png)
 
     service.mark_as_success(parent_id, user_id, fake_image_path, "test_provider", "test_model", 123)

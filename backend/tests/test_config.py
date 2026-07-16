@@ -14,8 +14,7 @@ def test_default_env_files_cover_repo_and_backend_roots() -> None:
 def test_settings_loads_values_from_dotenv_file(tmp_path: Path) -> None:
     env_file = tmp_path / ".env"
     env_file.write_text(
-        "DATABASE_URL=sqlite:///./data/from-env.sqlite3\n"
-        "AI_TIMEOUT_SECONDS=42\n",
+        "DATABASE_URL=sqlite:///./data/from-env.sqlite3\nAI_TIMEOUT_SECONDS=42\n",
         encoding="utf-8",
     )
 
