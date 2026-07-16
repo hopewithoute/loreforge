@@ -173,7 +173,9 @@ export function CanvasCard({ asset: initialAsset, isTrackPending }: CanvasCardPr
                   "transition-all duration-200 hover:bg-(--red-pencil) hover:text-(--paper) disabled:opacity-50",
                 )}
               >
-                {retryAsset.isPending ? "Retrying..." : (
+                {retryAsset.isPending ? (
+                  "Retrying..."
+                ) : (
                   <span className="flex items-center justify-center gap-1.5">
                     RETRY RENDER <RetryIcon />
                   </span>
@@ -251,7 +253,7 @@ export function CanvasCard({ asset: initialAsset, isTrackPending }: CanvasCardPr
           "active:translate-y-0 active:shadow-[0px_0px_0px_var(--graphite)]",
           "group-hover:flex",
           "disabled:cursor-not-allowed disabled:opacity-50",
-          "cursor-pointer hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_var(--graphite)] disabled:hover:translate-y-0 disabled:hover:shadow-[2px_2px_0px_var(--graphite)]"
+          "cursor-pointer hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_var(--graphite)] disabled:hover:translate-y-0 disabled:hover:shadow-[2px_2px_0px_var(--graphite)]",
         )}
         title="Prune this asset (and all descendants)"
       >

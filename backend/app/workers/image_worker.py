@@ -72,9 +72,7 @@ async def _process_generation(
                 # generated image was converted and saved to this asset's prepared_input_path.
                 # We only need this ONE image to forge the next evolutionary step.
                 try:
-                    img_bytes = cast(
-                        bytes, storage.cat_file(asset.prepared_input_path)
-                    )
+                    img_bytes = cast(bytes, storage.cat_file(asset.prepared_input_path))
                     reference_images.append(img_bytes)
                 except FileNotFoundError:
                     pass

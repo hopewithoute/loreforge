@@ -62,11 +62,11 @@ export function GalleryBoard() {
   if (trackRoots.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center p-10 pb-[15vh]">
-        <Logo className="h-64 w-64 brightness-0 grayscale opacity-[0.04]" />
-        <h2 className="mt-8 font-['Playfair_Display',serif] text-3xl italic text-(--graphite) opacity-60">
+        <Logo className="h-64 w-64 opacity-[0.04] brightness-0 grayscale" />
+        <h2 className="mt-8 font-['Playfair_Display',serif] text-3xl text-(--graphite) italic opacity-60">
           The Forge is Cold.
         </h2>
-        <p className="mt-4 font-sans text-sm uppercase tracking-[0.2em] text-(--pencil-gray) opacity-50">
+        <p className="mt-4 font-sans text-sm tracking-[0.2em] text-(--pencil-gray) uppercase opacity-50">
           Enter a prompt in the station to strike the anvil
         </p>
       </div>

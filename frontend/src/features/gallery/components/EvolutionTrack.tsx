@@ -4,10 +4,18 @@ import type { EvolutionNode } from "./GalleryBoard";
 import { cn } from "@/lib/utils";
 
 function isNodePending(node: EvolutionNode): boolean {
-  return node.siblings.some((s) => s.status === "pending") || node.children.some(isNodePending);
+  return (
+    node.siblings.some((s) => s.status === "pending") || node.children.some(isNodePending)
+  );
 }
 
-function TreeNodeUI({ node, isTrackPending }: { node: EvolutionNode; isTrackPending: boolean }) {
+function TreeNodeUI({
+  node,
+  isTrackPending,
+}: {
+  node: EvolutionNode;
+  isTrackPending: boolean;
+}) {
   return (
     <div className="flex w-max shrink-0 flex-row items-start gap-12">
       <div className="relative shrink-0">
@@ -72,7 +80,9 @@ export function EvolutionTrack({ tree }: EvolutionTrackProps) {
 
   const nodeCount = useMemo(() => {
     function count(node: EvolutionNode): number {
-      return node.siblings.length + node.children.reduce((sum, child) => sum + count(child), 0);
+      return (
+        node.siblings.length + node.children.reduce((sum, child) => sum + count(child), 0)
+      );
     }
     return count(tree);
   }, [tree]);
@@ -88,7 +98,7 @@ export function EvolutionTrack({ tree }: EvolutionTrackProps) {
       });
     }
     prevNodeCount.current = nodeCount;
-    
+
     // Delay checks to let images load and layout settle
     const t1 = setTimeout(updateScrollState, 200);
     const t2 = setTimeout(updateScrollState, 1500);
@@ -96,7 +106,7 @@ export function EvolutionTrack({ tree }: EvolutionTrackProps) {
       clearTimeout(t1);
       clearTimeout(t2);
     };
-  }, [tree, updateScrollState]);
+  }, [tree, nodeCount, updateScrollState]);
 
   useEffect(() => {
     const el = scrollRef.current;
