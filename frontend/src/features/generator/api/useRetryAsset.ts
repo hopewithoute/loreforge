@@ -1,37 +1,46 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { client } from "../../../shared/api/base";
-import type { Asset } from "../../generator/types";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useRetryAsset as useOrvalRetryAsset,
+  getListAssetsQueryKey,
+} from "@/api/endpoints/assets/assets";
+import type { AssetRead } from "@/api/model";
+import { extractError } from "@/lib/utils";
 
 export function useRetryAsset() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async ({ asset_id }: { asset_id: string }) => {
-      const { data, error } = await client.POST("/api/assets/{asset_id}/retry", {
-        params: {
-          path: { asset_id },
-        },
-      });
-
-      if (error) {
-        let msg = "Failed to retry asset";
-        if (typeof error.detail === "string") {
-          msg = error.detail;
-        } else if (Array.isArray(error.detail)) {
-          msg = error.detail[0]?.msg || msg;
-        }
-        throw new Error(msg);
-      }
-
-      return data;
-    },
-    onSuccess: (data) => {
-      // Optimistically update the gallery to reflect the pending status
-      queryClient.setQueryData(["gallery"], (old: Asset[] | undefined) => {
-        if (!old) return old;
-        return old.map((asset) => (asset.id === data.id ? data : asset));
-      });
-      void queryClient.invalidateQueries({ queryKey: ["gallery"] });
+  const mutation = useOrvalRetryAsset({
+    mutation: {
+      onSuccess: (response) => {
+        const data = response.data as AssetRead;
+        const queryKey = getListAssetsQueryKey();
+        queryClient.setQueryData(queryKey, (old: { data: AssetRead[] } | undefined) => {
+          if (!old) return old;
+          if (old.data) {
+            return {
+              ...old,
+              data: old.data.map((a: AssetRead) => (a.id === data.id ? data : a)),
+            };
+          }
+          return old;
+        });
+        void queryClient.invalidateQueries({ queryKey });
+      },
+      onError: (error: unknown) => {
+        throw new Error(extractError(error, "Failed to retry asset"));
+      },
     },
   });
+
+  return {
+    ...mutation,
+    mutate: (
+      { assetId }: { assetId: string },
+      options?: Parameters<typeof mutation.mutate>[1],
+    ) => mutation.mutate({ assetId }, options),
+    mutateAsync: (
+      { assetId }: { assetId: string },
+      options?: Parameters<typeof mutation.mutateAsync>[1],
+    ) => mutation.mutateAsync({ assetId }, options),
+  };
 }

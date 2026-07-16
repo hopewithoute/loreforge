@@ -1,37 +1,45 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { client } from "../../../shared/api/base";
-import type { Asset } from "../../generator/types";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useCreateAsset as useOrvalCreateAsset,
+  getListAssetsQueryKey,
+} from "@/api/endpoints/assets/assets";
+import type { AssetRead, AssetCreateForm } from "@/api/model";
+import { extractError } from "@/lib/utils";
 
 export function useCreateAsset() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (formData: FormData) => {
-      // openapi-fetch automatically sets the proper headers for FormData
-      // when passed as the body and the schema expects multipart/form-data
-      const { data, error } = await client.POST("/api/assets/", {
-        body: formData as never,
-      });
-
-      if (error) {
-        let msg = "Failed to create asset";
-        if (typeof error.detail === "string") {
-          msg = error.detail;
-        } else if (Array.isArray(error.detail)) {
-          msg = error.detail[0]?.msg || msg;
-        }
-        throw new Error(msg);
-      }
-
-      return data;
-    },
-    onSuccess: (data) => {
-      queryClient.setQueryData(["gallery"], (old: Asset[] | undefined) => {
-        if (!old) return [data];
-        return [data, ...old];
-      });
-      // Also invalidate the query to ensure we get the real data from the server eventually
-      void queryClient.invalidateQueries({ queryKey: ["gallery"] });
+  const mutation = useOrvalCreateAsset({
+    mutation: {
+      onSuccess: (response) => {
+        const newAsset = response.data as AssetRead;
+        const queryKey = getListAssetsQueryKey();
+        queryClient.setQueryData(queryKey, (old: { data: AssetRead[] } | undefined) => {
+          if (!old) return { data: [newAsset] };
+          if (old.data) return { ...old, data: [newAsset, ...old.data] };
+          return old;
+        });
+        void queryClient.invalidateQueries({ queryKey });
+      },
+      onError: (error: unknown) => {
+        throw new Error(extractError(error, "Failed to create asset"));
+      },
     },
   });
+
+  return {
+    ...mutation,
+    mutate: (
+      payload: AssetCreateForm,
+      options?: Parameters<typeof mutation.mutate>[1],
+    ) => {
+      mutation.mutate({ data: payload }, options);
+    },
+    mutateAsync: (
+      payload: AssetCreateForm,
+      options?: Parameters<typeof mutation.mutateAsync>[1],
+    ) => {
+      return mutation.mutateAsync({ data: payload }, options);
+    },
+  };
 }

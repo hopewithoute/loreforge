@@ -1,9 +1,28 @@
-import { type components } from "../../shared/api/schema";
+import type {
+  AssetCategory,
+  AssetStyle,
+  AssetStatus,
+  AssetRead as Asset,
+} from "@/api/model";
 
-export type AssetCategory = components["schemas"]["AssetCategory"];
-export type AssetStyle = components["schemas"]["AssetStyle"];
-export type AssetStatus = components["schemas"]["AssetStatus"];
-export type Asset = components["schemas"]["AssetRead"];
+export type { AssetCategory, AssetStyle, AssetStatus, Asset };
+
+export type EvolveTarget = Pick<
+  Asset,
+  "id" | "prompt" | "category" | "style" | "generated_image_path" | "reference_image_path"
+>;
+
+export type GeneratorFormValues = {
+  prompt: string;
+  category: AssetCategory;
+  style: AssetStyle;
+  existing_reference_id: string;
+  sibling_id: string;
+  previewUrl: string | null;
+  fileName: string | null;
+  evolveTarget: EvolveTarget | null;
+  fileInputResetKey: number;
+};
 
 export const CATEGORY_OPTIONS: { value: AssetCategory; label: string }[] = [
   { value: "environment", label: "Environment" },
