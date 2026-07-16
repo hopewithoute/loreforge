@@ -4,6 +4,7 @@ import { useAssetStatus } from "@/features/generator/api/useAssetStatus";
 import { useRetryAsset } from "@/features/generator/api/useRetryAsset";
 import { useDeleteAsset } from "@/features/generator/api/useDeleteAsset";
 import { useLightbox } from "@/features/gallery/components/LightboxProvider";
+import { useConfirm } from "@/app/ConfirmProvider";
 import { cn, extractError, getMediaUrl } from "@/lib/utils";
 
 interface CanvasCardProps {
@@ -11,6 +12,7 @@ interface CanvasCardProps {
 }
 
 export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
+  const confirm = useConfirm();
   // If the asset is still pending, we poll for its status. Otherwise we use the provided one.
   const { data: polledAsset } = useAssetStatus(
     initialAsset.status === "pending" ? initialAsset.id : null,
@@ -229,13 +231,14 @@ export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
       {/* Global Prune Button (Visible on Hover) */}
       <button
         type="button"
-        onClick={(e) => {
+        onClick={async (e) => {
           e.stopPropagation();
-          if (
-            confirm(
-              "Are you sure you want to prune this asset and all its descendants? This action cannot be undone.",
-            )
-          ) {
+          const isConfirmed = await confirm(
+            "This action will completely remove this asset and recursively delete all of its descendants from existence. This action cannot be undone.",
+            "Prune Branch?",
+            "Prune ⌫",
+          );
+          if (isConfirmed) {
             deleteAsset.mutate({ assetId: asset.id });
           }
         }}
