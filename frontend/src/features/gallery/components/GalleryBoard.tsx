@@ -2,40 +2,45 @@ import { useGallery } from "@/features/gallery/api/useGallery";
 import { EvolutionTrack } from "./EvolutionTrack";
 import type { Asset } from "@/features/generator/types";
 
-/**
- * Groups assets into generation tracks/lineages.
- * A lineage is a 2D array: each row represents a "generation step",
- * and contains an array of siblings (versions spawned from the same parent).
- */
-function buildLineage(root: Asset, allItems: Asset[]): Asset[][] {
-  const lineage: Asset[][] = [];
+export interface EvolutionNode {
+  groupId: string;
+  siblings: Asset[];
+  children: EvolutionNode[];
+}
 
-  // Step 1: Find the root asset and any of its direct siblings (retries/regens)
-  let currentSiblings = allItems.filter(
-    (item) => item.id === root.id || item.sibling_id === root.id,
-  );
-  lineage.push(currentSiblings);
+function buildEvolutionTree(root: Asset, allItems: Asset[]): EvolutionNode {
+  const siblingGroups = new Map<string, Asset[]>();
+  allItems.forEach((asset) => {
+    const groupId = asset.sibling_id || asset.id;
+    if (!siblingGroups.has(groupId)) {
+      siblingGroups.set(groupId, []);
+    }
+    siblingGroups.get(groupId)!.push(asset);
+  });
 
-  while (true) {
-    const currentSiblingIds = new Set(currentSiblings.map((s) => s.id));
+  const rootGroupId = root.sibling_id || root.id;
 
-    // Step 2: Find the NEXT child that evolved from ANY of the current siblings.
-    // We only take the first evolutionary root we find (LoreForge currently displays linear evolution tracks).
-    const nextEvolutionRoot = allItems.find(
-      (item) =>
-        item.parent_id && currentSiblingIds.has(item.parent_id) && !item.sibling_id,
-    );
+  function buildNode(groupId: string): EvolutionNode {
+    const siblings = siblingGroups.get(groupId) || [];
+    const siblingIds = new Set(siblings.map(s => s.id));
 
-    if (!nextEvolutionRoot) break;
+    const childGroups = new Set<string>();
+    for (const asset of allItems) {
+      if (asset.parent_id && siblingIds.has(asset.parent_id)) {
+        childGroups.add(asset.sibling_id || asset.id);
+      }
+    }
 
-    currentSiblings = allItems.filter(
-      (item) =>
-        item.id === nextEvolutionRoot.id || item.sibling_id === nextEvolutionRoot.id,
-    );
-    lineage.push(currentSiblings);
+    const children = Array.from(childGroups).map(childGroupId => buildNode(childGroupId));
+
+    return {
+      groupId,
+      siblings,
+      children
+    };
   }
 
-  return lineage;
+  return buildNode(rootGroupId);
 }
 
 export function GalleryBoard() {
@@ -62,7 +67,7 @@ export function GalleryBoard() {
   return (
     <>
       {trackRoots.map((root) => (
-        <EvolutionTrack key={root.id} lineage={buildLineage(root, items)} />
+        <EvolutionTrack key={root.id} tree={buildEvolutionTree(root, items)} />
       ))}
     </>
   );

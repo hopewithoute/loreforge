@@ -1,13 +1,51 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { SiblingDeck } from "./SiblingDeck";
-import type { Asset } from "@/features/generator/types";
+import type { EvolutionNode } from "./GalleryBoard";
 import { cn } from "@/lib/utils";
 
-interface EvolutionTrackProps {
-  lineage: Asset[][];
+function TreeNodeUI({ node }: { node: EvolutionNode }) {
+  return (
+    <div className="flex flex-row items-center gap-12">
+      <div className="relative shrink-0">
+        <SiblingDeck siblings={node.siblings} />
+        {/* Horizontal line extending right from parent */}
+        {node.children.length > 0 && (
+          <div className="absolute top-1/2 -right-6 -z-10 w-6 border-t-2 border-dashed border-(--pencil-gray) opacity-60 -translate-y-1/2" />
+        )}
+      </div>
+
+      {node.children.length > 0 && (
+        <div className="relative flex flex-col">
+          {node.children.map((child, index) => (
+            <div key={child.groupId} className="relative flex items-center py-5">
+              {/* Horizontal line coming into child */}
+              <div className="absolute top-1/2 -left-6 -z-10 w-6 border-t-2 border-dashed border-(--pencil-gray) opacity-60 -translate-y-1/2" />
+              
+              {/* Vertical line connecting children */}
+              {node.children.length > 1 && (
+                <div
+                  className="absolute -left-6 -z-10 w-px border-l-2 border-dashed border-(--pencil-gray) opacity-60"
+                  style={{
+                    top: index === 0 ? "50%" : 0,
+                    bottom: index === node.children.length - 1 ? "50%" : 0,
+                  }}
+                />
+              )}
+              
+              <TreeNodeUI node={child} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
-export function EvolutionTrack({ lineage }: EvolutionTrackProps) {
+interface EvolutionTrackProps {
+  tree: EvolutionNode;
+}
+
+export function EvolutionTrack({ tree }: EvolutionTrackProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isDown = useRef(false);
   const startX = useRef(0);
@@ -42,7 +80,7 @@ export function EvolutionTrack({ lineage }: EvolutionTrackProps) {
       clearTimeout(t1);
       clearTimeout(t2);
     };
-  }, [lineage.length, updateScrollState]);
+  }, [tree, updateScrollState]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -92,18 +130,15 @@ export function EvolutionTrack({ lineage }: EvolutionTrackProps) {
     scrollRef.current.scrollLeft = scrollLeftRef.current - walk;
   };
 
-  if (lineage.length === 0 || lineage[0].length === 0) return null;
-  const rootAsset = lineage[0][0];
+  if (!tree || tree.siblings.length === 0) return null;
+  const rootAsset = tree.siblings[0];
 
   return (
     <div className="relative flex w-full min-w-0 flex-col gap-5">
-      {/* The thin dashed connecting line */}
-      <div className="absolute top-42.5 left-0 z-0 hidden h-px w-full border-t border-dashed border-(--pencil-gray) md:block" />
-
       <div className="flex items-baseline justify-between border-b border-[rgba(28,28,26,0.1)] pb-2 text-[0.85rem] text-(--pencil-gray)">
         <span>Lineage // {rootAsset.prompt.substring(0, 30)}...</span>
-        <span className="font-['Caveat',cursive] text-[1.4rem] text-(--red-pencil)">
-          Gen {lineage.length}
+        <span className="font-['Caveat',cursive] text-[1.4rem] text-(--blueprint)">
+          Branching Tree
         </span>
       </div>
 
@@ -116,29 +151,12 @@ export function EvolutionTrack({ lineage }: EvolutionTrackProps) {
         onMouseMove={handleMouseMove}
         role="presentation"
         className={cn(
-          "horizontal-scrollbar relative z-10 box-border flex cursor-grab snap-x snap-mandatory",
-          "flex-row items-start gap-7.5 overflow-x-auto px-2.5 pt-2.5 pb-10 select-none md:pr-5 md:pl-2.5",
+          "horizontal-scrollbar relative z-10 box-border flex cursor-grab",
+          "flex-row items-start overflow-x-auto px-2.5 pt-2.5 pb-10 select-none md:pr-5 md:pl-2.5",
         )}
         style={{ maxWidth: "calc(100vw - 320px - 80px)" }}
       >
-        {/* Render each step of the evolution horizontally.
-            SiblingGroup is an array of variants (retries/regens) at that specific evolution step. */}
-        {lineage.map((siblingGroup, i) => (
-          <div
-            key={siblingGroup[0].id}
-            className="flex shrink-0 flex-row items-start gap-7.5"
-          >
-            {/* Sibling Deck (Solitaire style) */}
-            <SiblingDeck siblings={siblingGroup} />
-
-            {/* Evolution Arrow (between columns) */}
-            {i < lineage.length - 1 && (
-              <div className="mt-33.75 hidden shrink-0 bg-(--paper) px-1.25 text-[1.5rem] font-light text-(--pencil-gray) md:block">
-                →
-              </div>
-            )}
-          </div>
-        ))}
+        <TreeNodeUI node={tree} />
       </div>
 
       {/* Custom Slider — only visible when track overflows */}
