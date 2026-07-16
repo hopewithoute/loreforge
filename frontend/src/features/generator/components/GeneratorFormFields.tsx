@@ -1,5 +1,6 @@
 import { CATEGORY_OPTIONS, STYLE_OPTIONS } from "@/features/generator/types";
 import { cn } from "@/lib/utils";
+import { ArrowRightIcon } from "@/components/Icons";
 import type { AssetCategory, AssetStyle, EvolveTarget } from "@/features/generator/types";
 
 interface CategorySelectorProps {
@@ -278,13 +279,17 @@ export function SubmitControls({
             : "border border-(--red-pencil) bg-(--red-pencil) text-(--paper) hover:bg-[#bd3124] hover:shadow-[4px_4px_0px_rgba(28,28,26,0.08)]",
         )}
       >
-        {isPending
-          ? "Forging..."
-          : evolveTarget
-            ? "EVOLVE BRANCH ➔"
-            : siblingId
-              ? "Regenerate Variant"
-              : "Initialize Render"}
+        {isPending ? (
+          "FORGING..."
+        ) : evolveTarget ? (
+          <span className="flex items-center justify-center gap-2">
+            EVOLVE BRANCH <ArrowRightIcon className="h-4 w-4" />
+          </span>
+        ) : siblingId ? (
+          "REGENERATE VARIANT"
+        ) : (
+          "INITIALIZE RENDER"
+        )}
       </button>
     </>
   );

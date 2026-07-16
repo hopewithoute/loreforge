@@ -6,6 +6,7 @@ import { useDeleteAsset } from "@/features/generator/api/useDeleteAsset";
 import { useLightbox } from "@/features/gallery/components/LightboxProvider";
 import { useConfirm } from "@/app/ConfirmProvider";
 import { cn, extractError, getMediaUrl } from "@/lib/utils";
+import { RetryIcon, EditIcon, ArrowRightIcon } from "@/components/Icons";
 
 interface CanvasCardProps {
   asset: Asset;
@@ -171,7 +172,11 @@ export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
                   "transition-all duration-200 hover:bg-(--red-pencil) hover:text-(--paper) disabled:opacity-50",
                 )}
               >
-                {retryAsset.isPending ? "Retrying..." : "RETRY RENDER ↺"}
+                {retryAsset.isPending ? "Retrying..." : (
+                  <span className="flex items-center justify-center gap-1.5">
+                    RETRY RENDER <RetryIcon />
+                  </span>
+                )}
               </button>
             )}
             <button
@@ -184,7 +189,9 @@ export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
                 "transition-all duration-200 hover:bg-(--graphite) hover:text-(--paper) disabled:opacity-50",
               )}
             >
-              REVISE DRAFT ✎
+              <span className="flex items-center justify-center gap-1.5">
+                RETRY <RetryIcon />
+              </span>
             </button>
           </div>
         ) : (
@@ -199,7 +206,9 @@ export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
                 "transition-all duration-200 hover:bg-(--graphite) hover:text-(--paper) disabled:opacity-50",
               )}
             >
-              REGEN ✎
+              <span className="flex items-center justify-center gap-1.5">
+                REGEN <EditIcon />
+              </span>
             </button>
             <button
               type="button"
@@ -211,7 +220,9 @@ export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
                 "transition-all duration-200 hover:bg-(--blueprint) hover:text-(--paper) disabled:opacity-50",
               )}
             >
-              EVOLVE ➔
+              <span className="flex items-center justify-center gap-1.5">
+                EVOLVE <ArrowRightIcon />
+              </span>
             </button>
           </div>
         )}
