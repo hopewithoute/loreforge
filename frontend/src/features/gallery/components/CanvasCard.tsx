@@ -3,6 +3,7 @@ import type { Asset, GeneratorFormValues } from "@/features/generator/types";
 import { useAssetStatus } from "@/features/generator/api/useAssetStatus";
 import { useRetryAsset } from "@/features/generator/api/useRetryAsset";
 import { useDeleteAsset } from "@/features/generator/api/useDeleteAsset";
+import { useLightbox } from "@/features/gallery/components/LightboxProvider";
 import { cn, extractError, getMediaUrl } from "@/lib/utils";
 
 interface CanvasCardProps {
@@ -17,6 +18,7 @@ export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
   const asset = polledAsset || initialAsset;
   const retryAsset = useRetryAsset();
   const deleteAsset = useDeleteAsset();
+  const { openLightbox } = useLightbox();
 
   // Access global form context (provided in App.tsx)
   // This allows the CanvasCard to "reach over" to the left panel and update its inputs.
@@ -95,11 +97,17 @@ export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
         )}
       />
 
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
         className={cn(
           "relative flex aspect-square w-full cursor-zoom-in items-center justify-center",
           "overflow-hidden border border-(--graphite) bg-[#FFFFFF]",
         )}
+        onClick={() => {
+          if (asset.status === "success") {
+            openLightbox(getMediaUrl(asset.generated_image_path), asset.prompt);
+          }
+        }}
       >
         {/* Crosshairs */}
         <div className="absolute top-2.5 -left-1.25 z-2 h-px w-2.5 bg-[rgba(255,255,255,0.7)]" />
