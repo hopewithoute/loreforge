@@ -53,6 +53,9 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
   const fileInputResetKey = watch("fileInputResetKey");
   const watchCategory = watch("category");
   const watchStyle = watch("style");
+  const isLockedMode = watch("isLockedMode");
+
+  const isFormLocked = !!evolveTarget || isLockedMode;
 
   // Assemble all fields into a single payload when user submits.
   // This function decides whether we are creating a fresh asset,
@@ -100,6 +103,7 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
     setValue("fileName", null);
     setValue("previewUrl", null);
     setValue("existing_reference_id", "");
+    setValue("isLockedMode", false);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,6 +113,7 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
       setValue("fileName", file.name);
       setValue("previewUrl", objUrl);
       setValue("existing_reference_id", "");
+      setValue("isLockedMode", false);
     } else {
       clearFileState();
     }
@@ -124,6 +129,7 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
   const handleCancelEvolve = () => {
     reset();
     setValue("fileInputResetKey", fileInputResetKey + 1);
+    setValue("isLockedMode", false);
   };
 
   return (
@@ -131,15 +137,15 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
       <CategorySelector
         value={watchCategory}
         onChange={(cat) => setValue("category", cat)}
-        disabled={isPending || !!evolveTarget}
-        isLocked={!!evolveTarget}
+        disabled={isPending || isFormLocked}
+        isLocked={isFormLocked}
       />
 
       <StyleSelector
         value={watchStyle}
         onChange={(style) => setValue("style", style)}
-        disabled={isPending || !!evolveTarget}
-        isLocked={!!evolveTarget}
+        disabled={isPending || isFormLocked}
+        isLocked={isFormLocked}
       />
 
       <PromptField {...register("prompt")} disabled={isPending} />

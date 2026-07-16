@@ -59,6 +59,7 @@ export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
       setValue("existing_reference_id", hasReference ? asset.id : "");
       setValue("sibling_id", mode === "regen" ? asset.id : "");
       setValue("evolveTarget", null);
+      setValue("isLockedMode", mode === "regen" && !!asset.parent_id);
 
       if (asset.reference_image_path) {
         setValue("previewUrl", getMediaUrl(asset.reference_image_path));

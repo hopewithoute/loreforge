@@ -25,6 +25,7 @@ export function App() {
       fileName: null,
       evolveTarget: null,
       fileInputResetKey: 0,
+      isLockedMode: false,
     },
   });
 

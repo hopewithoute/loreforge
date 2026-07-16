@@ -22,6 +22,7 @@ export type GeneratorFormValues = {
   fileName: string | null;
   evolveTarget: EvolveTarget | null;
   fileInputResetKey: number;
+  isLockedMode: boolean;
 };
 
 export const CATEGORY_OPTIONS: { value: AssetCategory; label: string }[] = [
