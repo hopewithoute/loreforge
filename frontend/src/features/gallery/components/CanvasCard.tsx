@@ -242,13 +242,15 @@ export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
             deleteAsset.mutate({ assetId: asset.id });
           }
         }}
-        disabled={deleteAsset.isPending}
+        disabled={deleteAsset.isPending || asset.status === "pending"}
         className={cn(
-          "absolute -top-3 -right-3 z-20 hidden h-7 w-7 cursor-pointer items-center justify-center",
+          "absolute -top-3 -right-3 z-20 hidden h-7 w-7 items-center justify-center",
           "border-2 border-(--graphite) bg-(--paper) font-mono text-xs font-bold text-(--graphite)",
-          "shadow-[2px_2px_0px_var(--graphite)] transition-transform hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_var(--graphite)]",
+          "shadow-[2px_2px_0px_var(--graphite)] transition-transform",
           "active:translate-y-0 active:shadow-[0px_0px_0px_var(--graphite)]",
           "group-hover:flex",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+          "cursor-pointer hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_var(--graphite)] disabled:hover:translate-y-0 disabled:hover:shadow-[2px_2px_0px_var(--graphite)]"
         )}
         title="Prune this asset (and all descendants)"
       >
