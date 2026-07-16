@@ -171,6 +171,7 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
       <SubmitControls
         isPending={isPending}
         evolveTarget={evolveTarget}
+        siblingId={siblingId}
         onCancelEvolve={handleCancelEvolve}
       />
     </form>

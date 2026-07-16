@@ -239,12 +239,14 @@ export function ReferenceUpload({
 interface SubmitControlsProps {
   isPending: boolean;
   evolveTarget: EvolveTarget | null;
+  siblingId?: string;
   onCancelEvolve: () => void;
 }
 
 export function SubmitControls({
   isPending,
   evolveTarget,
+  siblingId,
   onCancelEvolve,
 }: SubmitControlsProps) {
   return (
@@ -280,7 +282,9 @@ export function SubmitControls({
           ? "Forging..."
           : evolveTarget
             ? "EVOLVE BRANCH ➔"
-            : "Initialize Render"}
+            : siblingId
+              ? "Regenerate Variant"
+              : "Initialize Render"}
       </button>
     </>
   );

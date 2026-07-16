@@ -171,7 +171,7 @@ export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
                   "transition-all duration-200 hover:bg-(--red-pencil) hover:text-(--paper) disabled:opacity-50",
                 )}
               >
-                {retryAsset.isPending ? "Recovering..." : "Recover ↺"}
+                {retryAsset.isPending ? "Retrying..." : "RETRY RENDER ↺"}
               </button>
             )}
             <div className="flex gap-2">
@@ -185,7 +185,7 @@ export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
                   "transition-all duration-200 hover:bg-(--graphite) hover:text-(--paper) disabled:opacity-50",
                 )}
               >
-                Recover ↺
+                REVISE DRAFT ✎
               </button>
               <button
                 type="button"
