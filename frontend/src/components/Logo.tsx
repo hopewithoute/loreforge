@@ -405,8 +405,6 @@ export function Logo({ className, ...props }: SVGProps<SVGSVGElement>) {
         fillOpacity="0.94117647"
         d="M461.857 460.688C464.581 471.132 467.909 482.633 470.265 493.045L469.247 493.447C466.559 483.383 463.944 473.3 461.403 463.198L461.857 460.688Z"
       />
-      <path fillOpacity="0.4" d="M352.022 663.818L512 756.242L672.083 663.754L672 479L512.001 386.666L352 479V663.818Z" fill="currentColor"/>
-      <path d="M729.073 630.932L889.043 538.529L889.043 353.714L729.043 261.309L569 353.714V538.529L729.073 630.932Z" fill="currentColor"/>
       <path
         fill="#9FB1C7"
         fillOpacity="0.87450981"
