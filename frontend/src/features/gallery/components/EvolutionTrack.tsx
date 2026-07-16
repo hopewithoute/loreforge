@@ -3,12 +3,24 @@ import { SiblingDeck } from "./SiblingDeck";
 import type { EvolutionNode } from "./GalleryBoard";
 import { cn } from "@/lib/utils";
 
+/**
+ * Recursively checks if any asset in this entire lineage track is currently generating.
+ * If true, we trigger a "lockdown" (disabling delete buttons) across the whole track
+ * to prevent breaking the tree while an evolution is processing.
+ */
 function isNodePending(node: EvolutionNode): boolean {
   return (
     node.siblings.some((s) => s.status === "pending") || node.children.some(isNodePending)
   );
 }
 
+/**
+ * Renders a single branch of the evolution tree.
+ * Uses a recursive layout approach:
+ * 1. Renders the current group of siblings (a stack of cards).
+ * 2. Draws SVG-like connecting dashed lines to its children.
+ * 3. Recursively calls itself to render the children.
+ */
 function TreeNodeUI({
   node,
   isTrackPending,
@@ -58,10 +70,13 @@ interface EvolutionTrackProps {
 }
 
 export function EvolutionTrack({ tree }: EvolutionTrackProps) {
+  // References for drag-to-scroll functionality
   const scrollRef = useRef<HTMLDivElement>(null);
   const isDown = useRef(false);
   const startX = useRef(0);
   const scrollLeftRef = useRef(0);
+  
+  // Custom slider state
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showSlider, setShowSlider] = useState(false);
 
@@ -90,6 +105,8 @@ export function EvolutionTrack({ tree }: EvolutionTrackProps) {
   const prevNodeCount = useRef(nodeCount);
   const isTrackPending = useMemo(() => isNodePending(tree), [tree]);
 
+  // Automatically scroll to the far right whenever a new asset is added
+  // so the user immediately sees their newly generated/evolved image.
   useEffect(() => {
     if (scrollRef.current && nodeCount > prevNodeCount.current) {
       scrollRef.current.scrollTo({

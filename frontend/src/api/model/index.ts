@@ -7,7 +7,6 @@ export * from "./assetEvolve";
 export * from "./assetRead";
 export * from "./assetStatus";
 export * from "./assetStyle";
-export * from "./healthResponse";
 export * from "./hTTPValidationError";
 export * from "./validationError";
 export * from "./validationErrorCtx";

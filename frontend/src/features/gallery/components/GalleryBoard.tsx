@@ -3,14 +3,27 @@ import { EvolutionTrack } from "./EvolutionTrack";
 import type { Asset } from "@/features/generator/types";
 import { Logo } from "@/components/Logo";
 
+/**
+ * Represents a node in the evolution tree, where a node is a group of sibling assets 
+ * (assets that share the same parent or are root alternatives).
+ */
 export interface EvolutionNode {
-  groupId: string;
-  siblings: Asset[];
-  children: EvolutionNode[];
+  groupId: string; // Either sibling_id (if exists) or the asset's own id
+  siblings: Asset[]; // All assets belonging to this group
+  children: EvolutionNode[]; // Branches (evolutions) spawned from any sibling in this group
 }
 
+/**
+ * Builds a recursive tree structure representing the evolution lineage.
+ * 
+ * @param root The root asset of this particular track (has no parent/sibling).
+ * @param allItems The flat list of all assets fetched from the server.
+ * @returns A hierarchical `EvolutionNode` tree where each node contains siblings and their children.
+ */
 function buildEvolutionTree(root: Asset, allItems: Asset[]): EvolutionNode {
   const siblingGroups = new Map<string, Asset[]>();
+  
+  // Group all assets by their sibling_id. If no sibling_id, the asset is its own group.
   allItems.forEach((asset) => {
     const groupId = asset.sibling_id || asset.id;
     if (!siblingGroups.has(groupId)) {
@@ -19,19 +32,26 @@ function buildEvolutionTree(root: Asset, allItems: Asset[]): EvolutionNode {
     siblingGroups.get(groupId)!.push(asset);
   });
 
+  // The root node's group ID
   const rootGroupId = root.sibling_id || root.id;
 
+  /**
+   * Recursively constructs a node and attaches its children.
+   */
   function buildNode(groupId: string): EvolutionNode {
     const siblings = siblingGroups.get(groupId) || [];
     const siblingIds = new Set(siblings.map((s) => s.id));
 
+    // Find all assets in the database whose parent is ONE of the current siblings.
     const childGroups = new Set<string>();
     for (const asset of allItems) {
       if (asset.parent_id && siblingIds.has(asset.parent_id)) {
+        // We only store the groupId to avoid duplicates (multiple siblings might spawn children in the same sibling group, though rare)
         childGroups.add(asset.sibling_id || asset.id);
       }
     }
 
+    // Recursively build the child nodes
     const children = Array.from(childGroups).map((childGroupId) =>
       buildNode(childGroupId),
     );

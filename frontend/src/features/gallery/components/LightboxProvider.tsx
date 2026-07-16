@@ -1,28 +1,7 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import type { ReactNode } from "react";
+import { useState, useEffect, useMemo } from "react";
+import type { ReactNode, KeyboardEvent as ReactKeyboardEvent } from "react";
 import { cn } from "@/lib/utils";
-
-interface LightboxState {
-  isOpen: boolean;
-  imageUrl: string | null;
-  prompt: string | null;
-}
-
-interface LightboxContextType {
-  openLightbox: (url: string, prompt: string) => void;
-  closeLightbox: () => void;
-}
-
-const LightboxContext = createContext<LightboxContextType | null>(null);
-
-// eslint-disable-next-line react-refresh/only-export-components
-export function useLightbox() {
-  const context = useContext(LightboxContext);
-  if (!context) {
-    throw new Error("useLightbox must be used within a LightboxProvider");
-  }
-  return context;
-}
+import { LightboxContext, type LightboxState } from "./LightboxContext";
 
 export function LightboxProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<LightboxState>({
@@ -66,13 +45,21 @@ export function LightboxProvider({ children }: { children: ReactNode }) {
     };
   }, [state.isOpen]);
 
+  const contextValue = useMemo(() => ({ openLightbox, closeLightbox }), []);
+
   return (
-    <LightboxContext.Provider value={{ openLightbox, closeLightbox }}>
+    <LightboxContext.Provider value={contextValue}>
       {children}
 
       {/* Lightbox Overlay */}
-      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e: ReactKeyboardEvent) => {
+          if (e.key === "Enter" || e.key === " ") {
+            closeLightbox();
+          }
+        }}
         className={cn(
           "fixed inset-0 z-50 flex items-center justify-center p-5 md:p-10",
           "bg-paper/95 backdrop-blur-sm transition-opacity duration-300",
@@ -82,8 +69,8 @@ export function LightboxProvider({ children }: { children: ReactNode }) {
         )}
         onClick={closeLightbox} // Click outside to close
       >
-        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
         <div
+          role="presentation"
           className={cn(
             "relative flex max-h-full max-w-5xl flex-col border-2 border-graphite bg-paper p-3",
             "shadow-[8px_8px_0px_rgba(28,28,26,0.1)] transition-transform duration-300",
@@ -93,6 +80,7 @@ export function LightboxProvider({ children }: { children: ReactNode }) {
         >
           {/* Close Button */}
           <button
+            type="button"
             onClick={closeLightbox}
             className="absolute -top-4 -right-4 z-10 flex h-8 w-8 items-center justify-center border-2 border-graphite bg-paper font-mono text-sm font-bold shadow-[2px_2px_0px_var(--graphite)] transition-transform hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_var(--graphite)] active:translate-y-0 active:shadow-[0px_0px_0px_var(--graphite)]"
             title="Close (Esc)"

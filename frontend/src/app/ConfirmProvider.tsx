@@ -1,32 +1,14 @@
-import { createContext, useContext, useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-
-type ConfirmFn = (
-  message: string,
-  title?: string,
-  confirmText?: ReactNode,
-) => Promise<boolean>;
-
-const ConfirmContext = createContext<ConfirmFn | null>(null);
-
-// eslint-disable-next-line react-refresh/only-export-components
-export function useConfirm() {
-  const context = useContext(ConfirmContext);
-  if (!context) {
-    throw new Error("useConfirm must be used within a ConfirmProvider");
-  }
-  return context;
-}
+import { ConfirmContext, type ConfirmFn } from "./ConfirmContext";
 
 export function ConfirmProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [title, setTitle] = useState("Confirm Action");
   const [confirmText, setConfirmText] = useState<ReactNode>("Confirm");
-  const [resolver, setResolver] = useState<{ resolve: (value: boolean) => void } | null>(
-    null,
-  );
+  const resolver = useRef<{ resolve: (value: boolean) => void } | null>(null);
 
   const confirm: ConfirmFn = useCallback(
     (msg: string, titleStr = "Confirm Action", confirmBtn: ReactNode = "Confirm") => {
@@ -35,7 +17,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       setConfirmText(confirmBtn);
       setIsOpen(true);
       return new Promise((resolve) => {
-        setResolver({ resolve });
+        resolver.current = { resolve };
       });
     },
     [],
@@ -43,13 +25,13 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
 
   const handleConfirm = useCallback(() => {
     setIsOpen(false);
-    if (resolver) resolver.resolve(true);
-  }, [resolver]);
+    if (resolver.current) resolver.current.resolve(true);
+  }, []);
 
   const handleCancel = useCallback(() => {
     setIsOpen(false);
-    if (resolver) resolver.resolve(false);
-  }, [resolver]);
+    if (resolver.current) resolver.current.resolve(false);
+  }, []);
 
   return (
     <ConfirmContext.Provider value={confirm}>

@@ -6,8 +6,8 @@ import type { Asset, GeneratorFormValues } from "@/features/generator/types";
 import { useAssetStatus } from "@/features/generator/api/useAssetStatus";
 import { useRetryAsset } from "@/features/generator/api/useRetryAsset";
 import { useDeleteAsset } from "@/features/generator/api/useDeleteAsset";
-import { useLightbox } from "@/features/gallery/components/LightboxProvider";
-import { useConfirm } from "@/app/ConfirmProvider";
+import { useLightbox } from "@/features/gallery/components/LightboxContext";
+import { useConfirm } from "@/app/ConfirmContext";
 import { cn, extractError, getMediaUrl } from "@/lib/utils";
 import { RetryIcon, EditIcon, ArrowRightIcon, TrashIcon } from "@/components/Icons";
 
@@ -31,9 +31,9 @@ export function CanvasCard({ asset: initialAsset, isTrackPending }: CanvasCardPr
       polledAsset &&
       polledAsset.status !== "pending"
     ) {
-      queryClient.invalidateQueries({ queryKey: getListAssetsQueryKey() });
+      void queryClient.invalidateQueries({ queryKey: getListAssetsQueryKey() });
     }
-  }, [initialAsset.status, polledAsset?.status, queryClient]);
+  }, [initialAsset.status, polledAsset, queryClient]);
 
   const asset = polledAsset || initialAsset;
   const retryAsset = useRetryAsset();
@@ -120,8 +120,9 @@ export function CanvasCard({ asset: initialAsset, isTrackPending }: CanvasCardPr
         )}
       />
 
-      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
+        role="button"
+        tabIndex={0}
         className={cn(
           "relative flex aspect-square w-full cursor-zoom-in items-center justify-center",
           "overflow-hidden border border-(--graphite) bg-[#FFFFFF]",
@@ -129,6 +130,13 @@ export function CanvasCard({ asset: initialAsset, isTrackPending }: CanvasCardPr
         onClick={() => {
           if (asset.status === "success") {
             openLightbox(getMediaUrl(asset.generated_image_path), asset.prompt);
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            if (asset.status === "success") {
+              openLightbox(getMediaUrl(asset.generated_image_path), asset.prompt);
+            }
           }
         }}
       >
