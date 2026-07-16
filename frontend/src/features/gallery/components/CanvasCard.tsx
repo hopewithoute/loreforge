@@ -250,12 +250,10 @@ export function CanvasCard({ asset: initialAsset, isTrackPending }: CanvasCardPr
         disabled={deleteAsset.isPending || asset.status === "pending" || isTrackPending}
         className={cn(
           "absolute -top-3 -right-3 z-20 hidden h-7 w-7 items-center justify-center",
-          "border-2 border-(--graphite) bg-(--paper) font-mono text-xs font-bold text-(--graphite)",
-          "shadow-[2px_2px_0px_var(--graphite)] transition-transform",
-          "active:translate-y-0 active:shadow-[0px_0px_0px_var(--graphite)]",
-          "group-hover:flex",
-          "disabled:cursor-not-allowed disabled:opacity-50",
-          "cursor-pointer hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_var(--graphite)] disabled:hover:translate-y-0 disabled:hover:shadow-[2px_2px_0px_var(--graphite)]",
+          "border border-(--graphite) bg-(--paper) font-mono text-[0.75rem] text-(--graphite)",
+          "transition-all duration-200 hover:border-(--red-pencil) hover:bg-(--red-pencil) hover:text-(--paper)",
+          "group-hover:flex cursor-pointer",
+          "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-(--graphite) disabled:hover:bg-(--paper) disabled:hover:text-(--graphite)",
         )}
         title="Prune this asset (and all descendants)"
       >
