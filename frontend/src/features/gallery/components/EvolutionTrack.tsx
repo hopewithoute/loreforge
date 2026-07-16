@@ -152,7 +152,7 @@ export function EvolutionTrack({ tree }: EvolutionTrackProps) {
         role="presentation"
         className={cn(
           "horizontal-scrollbar relative z-10 box-border flex w-full cursor-grab",
-          "flex-row items-start overflow-x-auto px-2.5 pt-2.5 pb-10 select-none md:pr-5 md:pl-2.5",
+          "flex-row items-start overflow-x-auto px-4 pt-5 pb-10 select-none",
         )}
       >
         <TreeNodeUI node={tree} />
