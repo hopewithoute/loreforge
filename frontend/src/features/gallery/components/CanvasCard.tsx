@@ -1,4 +1,7 @@
+import { useEffect } from "react";
 import { useFormContext } from "react-hook-form";
+import { useQueryClient } from "@tanstack/react-query";
+import { getListAssetsQueryKey } from "@/api/endpoints/assets/assets";
 import type { Asset, GeneratorFormValues } from "@/features/generator/types";
 import { useAssetStatus } from "@/features/generator/api/useAssetStatus";
 import { useRetryAsset } from "@/features/generator/api/useRetryAsset";
@@ -19,6 +22,19 @@ export function CanvasCard({ asset: initialAsset, isTrackPending }: CanvasCardPr
   const { data: polledAsset } = useAssetStatus(
     initialAsset.status === "pending" ? initialAsset.id : null,
   );
+
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (
+      initialAsset.status === "pending" &&
+      polledAsset &&
+      polledAsset.status !== "pending"
+    ) {
+      queryClient.invalidateQueries({ queryKey: getListAssetsQueryKey() });
+    }
+  }, [initialAsset.status, polledAsset?.status, queryClient]);
+
   const asset = polledAsset || initialAsset;
   const retryAsset = useRetryAsset();
   const deleteAsset = useDeleteAsset();
@@ -252,7 +268,7 @@ export function CanvasCard({ asset: initialAsset, isTrackPending }: CanvasCardPr
           "absolute -top-3 -right-3 z-20 hidden h-7 w-7 items-center justify-center",
           "border border-(--graphite) bg-(--paper) font-mono text-[0.75rem] text-(--graphite)",
           "transition-all duration-200 hover:border-(--red-pencil) hover:bg-(--red-pencil) hover:text-(--paper)",
-          "group-hover:flex cursor-pointer",
+          "cursor-pointer group-hover:flex",
           "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-(--graphite) disabled:hover:bg-(--paper) disabled:hover:text-(--graphite)",
         )}
         title="Prune this asset (and all descendants)"
