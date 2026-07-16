@@ -22,7 +22,7 @@ function buildEvolutionTree(root: Asset, allItems: Asset[]): EvolutionNode {
 
   function buildNode(groupId: string): EvolutionNode {
     const siblings = siblingGroups.get(groupId) || [];
-    const siblingIds = new Set(siblings.map(s => s.id));
+    const siblingIds = new Set(siblings.map((s) => s.id));
 
     const childGroups = new Set<string>();
     for (const asset of allItems) {
@@ -31,12 +31,14 @@ function buildEvolutionTree(root: Asset, allItems: Asset[]): EvolutionNode {
       }
     }
 
-    const children = Array.from(childGroups).map(childGroupId => buildNode(childGroupId));
+    const children = Array.from(childGroups).map((childGroupId) =>
+      buildNode(childGroupId),
+    );
 
     return {
       groupId,
       siblings,
-      children
+      children,
     };
   }
 

@@ -80,7 +80,7 @@ export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
   return (
     <div
       className={cn(
-        "group relative flex max-w-70 min-w-70 shrink-0 snap-start flex-col gap-3.75 p-2.5",
+        "group relative flex w-70 shrink-0 snap-start flex-col gap-3.75 p-2.5",
         "border border-(--graphite) bg-(--paper) shadow-[3px_3px_0px_rgba(0,0,0,0.05)]",
         "transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)]",
         "hover:z-10 hover:-translate-y-1 hover:bg-[#FFFFFF] hover:shadow-[10px_10px_20px_rgba(0,0,0,0.05)]",

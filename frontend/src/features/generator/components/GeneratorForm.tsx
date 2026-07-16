@@ -114,8 +114,6 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
     }
   };
 
-
-
   const handleClearFile = (e: React.MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation();
     e.preventDefault();

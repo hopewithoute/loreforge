@@ -5,33 +5,33 @@ import { cn } from "@/lib/utils";
 
 function TreeNodeUI({ node }: { node: EvolutionNode }) {
   return (
-    <div className="flex flex-row items-center gap-12">
+    <div className="flex w-max shrink-0 flex-row items-start gap-12">
       <div className="relative shrink-0">
         <SiblingDeck siblings={node.siblings} />
         {/* Horizontal line extending right from parent */}
         {node.children.length > 0 && (
-          <div className="absolute top-1/2 -right-6 -z-10 w-6 border-t-2 border-dashed border-(--pencil-gray) opacity-60 -translate-y-1/2" />
+          <div className="absolute top-35 -right-6 -z-10 w-6 border-t-2 border-dashed border-(--pencil-gray) opacity-60" />
         )}
       </div>
 
       {node.children.length > 0 && (
         <div className="relative flex flex-col">
           {node.children.map((child, index) => (
-            <div key={child.groupId} className="relative flex items-center py-5">
-              {/* Horizontal line coming into child */}
-              <div className="absolute top-1/2 -left-6 -z-10 w-6 border-t-2 border-dashed border-(--pencil-gray) opacity-60 -translate-y-1/2" />
-              
-              {/* Vertical line connecting children */}
+            <div key={child.groupId} className="relative flex items-start pb-10">
+              {/* Horizontal line connecting to this child */}
+              <div className="absolute top-35 -left-6 -z-10 w-6 border-t-2 border-dashed border-(--pencil-gray) opacity-60" />
+
+              {/* Vertical line connecting to siblings */}
               {node.children.length > 1 && (
                 <div
                   className="absolute -left-6 -z-10 w-px border-l-2 border-dashed border-(--pencil-gray) opacity-60"
                   style={{
-                    top: index === 0 ? "50%" : 0,
-                    bottom: index === node.children.length - 1 ? "50%" : 0,
+                    top: index === 0 ? "140px" : 0,
+                    bottom: index === node.children.length - 1 ? "calc(100% - 140px)" : 0,
                   }}
                 />
               )}
-              
+
               <TreeNodeUI node={child} />
             </div>
           ))}
@@ -151,10 +151,9 @@ export function EvolutionTrack({ tree }: EvolutionTrackProps) {
         onMouseMove={handleMouseMove}
         role="presentation"
         className={cn(
-          "horizontal-scrollbar relative z-10 box-border flex cursor-grab",
+          "horizontal-scrollbar relative z-10 box-border flex w-full cursor-grab",
           "flex-row items-start overflow-x-auto px-2.5 pt-2.5 pb-10 select-none md:pr-5 md:pl-2.5",
         )}
-        style={{ maxWidth: "calc(100vw - 320px - 80px)" }}
       >
         <TreeNodeUI node={tree} />
       </div>

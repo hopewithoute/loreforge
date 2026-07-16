@@ -31,7 +31,7 @@ export function App() {
       {/* 2. Wrap the entire app in FormProvider.
           This allows components like CanvasCard to call `useFormContext` 
           and directly mutate the form when user clicks 'Regen' or 'Evolve'. */}
-      <div className="app-container min-h-screen w-full">
+      <div className="app-container min-h-screen w-full max-w-[100vw]">
         {/* LEFT PANEL: DRAFTING STATION SIDEBAR */}
         <div
           className={cn(
@@ -46,7 +46,7 @@ export function App() {
         {/* RIGHT PANEL: THE CANVAS / GALLERY (SWIMLANES) */}
         <div
           className={cn(
-            "box-border flex w-full flex-1 flex-col gap-17.5 p-5",
+            "box-border flex w-full min-w-0 flex-1 flex-col gap-17.5 p-5",
             "md:w-[calc(100%-320px)] md:px-10 md:py-12",
           )}
         >
