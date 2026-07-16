@@ -50,6 +50,7 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
   const previewUrl = watch("previewUrl");
   const fileName = watch("fileName");
   const evolveTarget = watch("evolveTarget");
+  const siblingId = watch("sibling_id");
   const fileInputResetKey = watch("fileInputResetKey");
   const watchCategory = watch("category");
   const watchStyle = watch("style");
