@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { GeneratorForm } from "./GeneratorForm";
+import { Logo } from "@/components/Logo";
 import { cn, extractError } from "@/lib/utils";
 import { useCreateAsset } from "@/features/generator/api/useCreateAsset";
 import { useEvolveAsset } from "@/features/generator/api/useEvolveAsset";
@@ -59,22 +60,26 @@ export function GeneratorPanel() {
 
   return (
     <div className="relative flex h-full flex-col">
-      <h1
-        className={cn(
-          "m-0 mb-1 font-['Playfair_Display',serif] text-[2.2rem]",
-          "font-semibold text-(--graphite) italic",
-        )}
-      >
-        LoreForge
-      </h1>
-      <p
-        className={cn(
-          "mb-6 border-b border-(--graphite) pb-3.75",
-          "text-[0.8rem] tracking-[2px] text-(--pencil-gray) uppercase",
-        )}
-      >
-        Art Dept. Station
-      </p>
+      <div className="mb-6 flex items-center gap-4 border-b border-(--graphite) pb-4">
+        <Logo className="h-[3.2rem] w-[3.2rem] text-(--blueprint) opacity-90 drop-shadow-[2px_2px_0px_rgba(28,28,26,0.2)]" />
+        <div className="flex flex-col">
+          <h1
+            className={cn(
+              "m-0 font-['Playfair_Display',serif] text-[2.2rem]",
+              "leading-none font-semibold text-(--graphite) italic",
+            )}
+          >
+            LoreForge
+          </h1>
+          <p
+            className={cn(
+              "mt-1 text-[0.7rem] tracking-[2px] text-(--pencil-gray) uppercase",
+            )}
+          >
+            Art Dept. Station
+          </p>
+        </div>
+      </div>
 
       {submitError && (
         <div className="mb-6 border border-(--red-pencil) bg-red-500/5 p-3 font-mono text-sm text-(--red-pencil)">
