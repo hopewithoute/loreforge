@@ -225,6 +225,32 @@ export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
           </div>
         )}
       </div>
+
+      {/* Global Prune Button (Visible on Hover) */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (
+            confirm(
+              "Are you sure you want to prune this asset and all its descendants? This action cannot be undone.",
+            )
+          ) {
+            deleteAsset.mutate({ assetId: asset.id });
+          }
+        }}
+        disabled={deleteAsset.isPending}
+        className={cn(
+          "absolute -top-3 -right-3 z-20 hidden h-7 w-7 cursor-pointer items-center justify-center",
+          "border-2 border-(--graphite) bg-(--paper) font-mono text-xs font-bold text-(--graphite)",
+          "shadow-[2px_2px_0px_var(--graphite)] transition-transform hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_var(--graphite)]",
+          "active:translate-y-0 active:shadow-[0px_0px_0px_var(--graphite)]",
+          "group-hover:flex",
+        )}
+        title="Prune this asset (and all descendants)"
+      >
+        {deleteAsset.isPending ? "..." : "X"}
+      </button>
     </div>
   );
 }

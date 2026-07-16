@@ -127,11 +127,33 @@ class AssetService:
         if not asset:
             return False
 
+        # Gather all descendant IDs to prune the whole branch
+        def get_descendants(parent_id: str) -> list[str]:
+            desc_ids = []
+            stmt = select(Asset.id).where(Asset.parent_id == parent_id)
+            children = self._db.scalars(stmt).all()
+            for child_id in children:
+                desc_ids.append(child_id)
+                desc_ids.extend(get_descendants(child_id))
+            return desc_ids
+
+        descendant_ids = get_descendants(asset_id)
+        all_ids_to_delete = [asset_id] + descendant_ids
+
         try:
-            self._db.delete(asset)
+            # Delete from DB
+            for d_id in reversed(all_ids_to_delete):
+                # We delete in reverse to avoid foreign key constraint issues if any,
+                # though SQLite 'SET NULL' doesn't restrict deletes.
+                a = self._db.scalar(select(Asset).where(Asset.id == d_id))
+                if a:
+                    self._db.delete(a)
             self._db.commit()
-            with contextlib.suppress(FileNotFoundError):
-                self._storage.rm(f"assets/{asset_id}", recursive=True)
+
+            # Delete from storage
+            for d_id in all_ids_to_delete:
+                with contextlib.suppress(FileNotFoundError):
+                    self._storage.rm(f"assets/{d_id}", recursive=True)
             return True
         except Exception:
             self._db.rollback()
