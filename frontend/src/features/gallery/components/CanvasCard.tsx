@@ -10,9 +10,10 @@ import { RetryIcon, EditIcon, ArrowRightIcon } from "@/components/Icons";
 
 interface CanvasCardProps {
   asset: Asset;
+  isTrackPending?: boolean;
 }
 
-export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
+export function CanvasCard({ asset: initialAsset, isTrackPending }: CanvasCardProps) {
   const confirm = useConfirm();
   // If the asset is still pending, we poll for its status. Otherwise we use the provided one.
   const { data: polledAsset } = useAssetStatus(
@@ -242,7 +243,7 @@ export function CanvasCard({ asset: initialAsset }: CanvasCardProps) {
             deleteAsset.mutate({ assetId: asset.id });
           }
         }}
-        disabled={deleteAsset.isPending || asset.status === "pending"}
+        disabled={deleteAsset.isPending || asset.status === "pending" || isTrackPending}
         className={cn(
           "absolute -top-3 -right-3 z-20 hidden h-7 w-7 items-center justify-center",
           "border-2 border-(--graphite) bg-(--paper) font-mono text-xs font-bold text-(--graphite)",

@@ -3,11 +3,15 @@ import { SiblingDeck } from "./SiblingDeck";
 import type { EvolutionNode } from "./GalleryBoard";
 import { cn } from "@/lib/utils";
 
-function TreeNodeUI({ node }: { node: EvolutionNode }) {
+function isNodePending(node: EvolutionNode): boolean {
+  return node.siblings.some((s) => s.status === "pending") || node.children.some(isNodePending);
+}
+
+function TreeNodeUI({ node, isTrackPending }: { node: EvolutionNode; isTrackPending: boolean }) {
   return (
     <div className="flex w-max shrink-0 flex-row items-start gap-12">
       <div className="relative shrink-0">
-        <SiblingDeck siblings={node.siblings} />
+        <SiblingDeck siblings={node.siblings} isTrackPending={isTrackPending} />
         {/* Horizontal line extending right from parent */}
         {node.children.length > 0 && (
           <div className="absolute top-35 -right-6 -z-10 w-6 border-t-2 border-dashed border-(--pencil-gray) opacity-60" />
@@ -32,7 +36,7 @@ function TreeNodeUI({ node }: { node: EvolutionNode }) {
                 />
               )}
 
-              <TreeNodeUI node={child} />
+              <TreeNodeUI node={child} isTrackPending={isTrackPending} />
             </div>
           ))}
         </div>
@@ -74,6 +78,7 @@ export function EvolutionTrack({ tree }: EvolutionTrackProps) {
   }, [tree]);
 
   const prevNodeCount = useRef(nodeCount);
+  const isTrackPending = useMemo(() => isNodePending(tree), [tree]);
 
   useEffect(() => {
     if (scrollRef.current && nodeCount > prevNodeCount.current) {
@@ -166,7 +171,7 @@ export function EvolutionTrack({ tree }: EvolutionTrackProps) {
           "flex-row items-start overflow-x-auto px-4 pt-5 pb-10 select-none",
         )}
       >
-        <TreeNodeUI node={tree} />
+        <TreeNodeUI node={tree} isTrackPending={isTrackPending} />
       </div>
 
       {/* Custom Slider — only visible when track overflows */}

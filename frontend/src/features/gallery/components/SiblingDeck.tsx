@@ -5,9 +5,10 @@ import type { Asset } from "@/features/generator/types";
 
 interface SiblingDeckProps {
   siblings: Asset[];
+  isTrackPending?: boolean;
 }
 
-export function SiblingDeck({ siblings }: SiblingDeckProps) {
+export function SiblingDeck({ siblings, isTrackPending }: SiblingDeckProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   if (siblings.length === 0) return null;
@@ -49,7 +50,7 @@ export function SiblingDeck({ siblings }: SiblingDeckProps) {
 
       {/* Main Card */}
       <div className="relative z-10 transition-transform duration-300">
-        <CanvasCard asset={currentAsset} />
+        <CanvasCard asset={currentAsset} isTrackPending={isTrackPending} />
       </div>
 
       {/* Pagination Controls */}
