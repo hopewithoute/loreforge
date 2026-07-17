@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="docs/origami_anvil_logo_1784206199861.jpg" alt="LoreForge Logo" width="256" />
+</div>
+
 # LoreForge
 
 LoreForge is an game concept image generator built with FastAPI, Vite, React, and Cloudflare Workers AI.
@@ -59,7 +63,7 @@ bash dev.sh
 ---
 
 ## Testing & Quality Assurance
-LoreForge is strictly tested to guarantee reliability. 
+LoreForge is strictly tested 
 To verify system integrity locally:
 
 **Frontend Tests (Vitest + JSDom):**
@@ -78,7 +82,7 @@ uv run pytest
 
 ## Production Deployment (Under 5 Minutes)
 
-LoreForge is optimized for a single-node deployment (e.g., $5 VPS) using a highly efficient **Multi-Stage Docker Build** and **Docker Compose**. 
+LoreForge is optimized for a single-node deployment
 
 1. Ensure you have Docker and Docker Compose installed on your server.
 2. Clone the repository and navigate to the project root.
