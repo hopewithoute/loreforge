@@ -72,8 +72,8 @@ export function LightboxProvider({ children }: { children: ReactNode }) {
         <div
           role="presentation"
           className={cn(
-            "relative flex max-h-full max-w-5xl flex-col border-2 border-graphite bg-paper p-3",
-            "shadow-[8px_8px_0px_rgba(28,28,26,0.1)] transition-transform duration-300",
+            "relative flex max-h-full max-w-5xl flex-col rounded-xl border border-[rgba(15,23,42,0.1)] bg-paper p-3 shadow-2xl",
+            "transition-transform duration-300",
             state.isOpen ? "translate-y-0 scale-100" : "translate-y-4 scale-95",
           )}
           onClick={(e) => e.stopPropagation()} // Prevent click inside from closing
@@ -82,7 +82,7 @@ export function LightboxProvider({ children }: { children: ReactNode }) {
           <button
             type="button"
             onClick={closeLightbox}
-            className="absolute -top-4 -right-4 z-10 flex h-8 w-8 items-center justify-center border-2 border-graphite bg-paper font-mono text-sm font-bold shadow-[2px_2px_0px_var(--graphite)] transition-transform hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_var(--graphite)] active:translate-y-0 active:shadow-[0px_0px_0px_var(--graphite)]"
+            className="absolute -top-4 -right-4 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-[rgba(15,23,42,0.1)] bg-paper font-mono text-sm font-bold shadow-md transition-transform hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:shadow-sm"
             title="Close (Esc)"
           >
             X

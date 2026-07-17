@@ -1,6 +1,6 @@
 import { GeneratorPanel } from "@/features/generator/components/GeneratorPanel";
 import { GalleryBoard } from "@/features/gallery/components/GalleryBoard";
-import { LightboxProvider } from "@/features/gallery/components/LightboxProvider";
+import { LightboxProvider } from "@/app/LightboxProvider";
 import { ConfirmProvider } from "@/app/ConfirmProvider";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -26,7 +26,6 @@ export function App() {
       previewUrl: null,
       fileName: null,
       evolveTarget: null,
-      fileInputResetKey: 0,
       isLockedMode: false,
     },
   });
@@ -35,36 +34,33 @@ export function App() {
 
   return (
     <>
-      {/* LANDING HERO OVERLAY (Concept 6: Drafting Table) */}
+      {/* LANDING HERO OVERLAY (Full Screen Hexagon Dive) */}
       <div
         className={cn(
-          "fixed inset-0 z-50 flex items-center justify-center bg-paper/90 backdrop-blur-sm transition-opacity duration-1000",
+          "fixed inset-0 z-50 flex items-center justify-center transition-all duration-1000 ease-[cubic-bezier(0.25,0.8,0.25,1)]",
           hasEntered ? "pointer-events-none opacity-0" : "opacity-100",
         )}
       >
         <div
           className={cn(
-            "relative max-w-[600px] border border-graphite bg-paper p-16 text-center shadow-[12px_12px_0px_rgba(28,28,26,0.08)] transition-all duration-700",
-            hasEntered ? "scale-95 -rotate-3" : "-rotate-1",
+            "relative flex max-w-150 flex-col items-center justify-center text-center transition-transform duration-1000 ease-[cubic-bezier(0.25,0.8,0.25,1)]",
+            hasEntered ? "scale-[3]" : "scale-100",
           )}
         >
-          {/* Red pencil mark accent */}
-          <div className="absolute top-2.5 -right-5 h-0.5 w-10 rotate-[15deg] bg-red-pencil"></div>
+          <Logo className="mb-8 h-32 w-32 text-blueprint drop-shadow-[0_0_15px_rgba(94,129,172,0.4)]" />
 
-          <Logo className="mx-auto mb-6 h-24 w-24 text-blueprint drop-shadow-[4px_4px_0px_rgba(28,28,26,0.1)]" />
-
-          <h1 className="mb-4 font-serif text-6xl font-semibold text-graphite">
+          <h1 className="mb-4 font-serif text-7xl font-semibold text-graphite drop-shadow-md">
             LoreForge
           </h1>
-          <p className="mb-10 text-base leading-relaxed text-pencil-gray">
-            Turn imagination into visual assets.<br />
-            Iterative drafting for game creators.
+          <p className="mb-12 font-mono text-sm leading-relaxed text-pencil-gray">
+            PRECISION ASSET GENERATION FORGE.
+            <br />[ SYSTEM STATUS: READY ]
           </p>
           <button
             onClick={() => setHasEntered(true)}
-            className="border border-dashed border-graphite bg-transparent px-12 py-4 font-mono text-sm tracking-wider text-graphite uppercase transition-all duration-200 hover:border-solid hover:bg-graphite hover:text-paper hover:shadow-[4px_4px_0px_var(--red-pencil)]"
+            className="cursor-pointer rounded-lg border border-transparent bg-blueprint px-14 py-4 font-mono font-bold tracking-widest text-paper uppercase shadow-lg transition-all duration-300 hover:bg-[#81a1c1] hover:shadow-xl active:translate-y-0.5 active:shadow-sm"
           >
-            Begin Drafting
+            INITIALIZE SYSTEM
           </button>
         </div>
       </div>
@@ -75,12 +71,19 @@ export function App() {
           and directly mutate the form when user clicks 'Regen' or 'Evolve'. */}
         <LightboxProvider>
           <ConfirmProvider>
-            <div className="app-container min-h-screen w-full max-w-[100vw]">
+            <div
+              className={cn(
+                "app-container flex min-h-screen w-full max-w-[100vw] flex-col transition-all duration-1000 ease-[cubic-bezier(0.25,0.8,0.25,1)] md:flex-row",
+                hasEntered
+                  ? "blur-0 scale-100 opacity-100"
+                  : "pointer-events-none scale-95 opacity-0 blur-md",
+              )}
+            >
               {/* LEFT PANEL: DRAFTING STATION SIDEBAR */}
               <div
                 className={cn(
-                  "custom-scrollbar z-20 w-full border-r border-graphite bg-paper/95 p-6 backdrop-blur-sm",
-                  "md:sticky md:top-0 md:h-screen md:w-[320px] md:min-w-[320px] md:overflow-y-auto md:px-6 md:py-8",
+                  "custom-scrollbar z-20 w-full border-r border-silver bg-paper/95 p-6 backdrop-blur-sm",
+                  "md:sticky md:top-0 md:h-screen md:w-[320px] md:min-w-[320px] md:overflow-y-auto md:p-8",
                 )}
               >
                 <GeneratorPanel />
@@ -89,8 +92,8 @@ export function App() {
               {/* RIGHT PANEL: THE CANVAS / GALLERY (SWIMLANES) */}
               <div
                 className={cn(
-                  "box-border flex w-full min-w-0 flex-1 flex-col gap-17.5 p-5",
-                  "md:w-[calc(100%-320px)] md:px-10 md:py-12",
+                  "box-border flex w-full min-w-0 flex-1 flex-col gap-12 p-6",
+                  "md:w-[calc(100%-320px)] md:px-12 md:py-8",
                 )}
               >
                 <GalleryBoard />

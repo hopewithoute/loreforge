@@ -38,7 +38,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       {children}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-(--canvas)/60 backdrop-blur-[2px]">
-          <div className="animate-in fade-in zoom-in-95 w-[320px] border-2 border-(--graphite) bg-(--paper) p-6 shadow-[8px_8px_0px_rgba(28,28,26,1)] duration-200">
+          <div className="animate-in fade-in zoom-in-95 w-[320px] rounded-xl border border-[rgba(15,23,42,0.1)] bg-(--paper) p-6 shadow-xl duration-200">
             <h3 className="mb-4 font-mono text-[14px] font-bold tracking-wide text-(--graphite) uppercase">
               {title}
             </h3>
@@ -50,8 +50,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
                 type="button"
                 onClick={handleCancel}
                 className={cn(
-                  "flex-1 cursor-pointer border border-(--graphite) bg-transparent p-2",
-                  "font-mono text-xs tracking-wider text-(--graphite) uppercase",
+                  "cursor-pointer rounded-md border border-[rgba(15,23,42,0.15)] bg-transparent px-4 py-2 font-mono text-xs tracking-wider uppercase transition-colors hover:bg-[rgba(15,23,42,0.05)]",
                   "transition-colors duration-200 hover:bg-(--graphite) hover:text-(--paper)",
                 )}
               >

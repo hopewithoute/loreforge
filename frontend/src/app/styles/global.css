@@ -2,11 +2,15 @@
 @import "tailwindcss";
 
 @theme {
-  --color-paper: #f4f3ed;
-  --color-graphite: #1c1c1a;
-  --color-pencil-gray: #7a7a75;
-  --color-red-pencil: #d63c2e;
-  --color-blueprint: #2a5c8b;
+  --color-canvas: #e5e9f0; /* nord5 */
+  --color-paper: #eceff4; /* nord6 */
+
+  --color-graphite: #2e3440; /* nord0 */
+  --color-pencil-gray: #4c566a; /* nord3 */
+
+  --color-blueprint: #5e81ac; /* nord10 */
+  --color-red-pencil: #bf616a; /* nord11 */
+  --color-silver: #d8dee9; /* nord4 */
 
   --font-serif: "Playfair Display", serif;
   --font-mono: "IBM Plex Mono", monospace;
@@ -14,27 +18,27 @@
 }
 
 :root {
-  --paper: #f4f3ed;
-  --graphite: #1c1c1a;
-  --pencil-gray: #7a7a75;
-  --red-pencil: #d63c2e;
-  --blueprint: #2a5c8b;
+  --canvas: #e5e9f0;
+  --paper: #eceff4;
+  --graphite: #2e3440;
+  --pencil-gray: #4c566a;
+  --blueprint: #5e81ac;
+  --red-pencil: #bf616a;
+  --silver: #d8dee9;
 
-  --line-thin: 1px solid var(--graphite);
-  --line-dashed: 1px dashed var(--pencil-gray);
-  --origami-shadow: 4px 4px 0px rgba(28, 28, 26, 0.08);
-  --active-shadow: 2px 2px 0px var(--red-pencil);
+  --line-thin: 1px solid var(--silver);
+  --line-dashed: 1px dashed var(--silver);
+  --origami-shadow: 4px 4px 0px rgba(46, 52, 64, 0.05); /* nord0 with opacity */
+  --active-shadow: 4px 4px 0px rgba(94, 129, 172, 0.15); /* nord10 with opacity */
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: var(--paper);
-  /* Blueprint/Graph paper grid */
-  background-image:
-    linear-gradient(rgba(122, 122, 117, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(122, 122, 117, 0.1) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background-color: var(--canvas);
+  /* Precision Hexagon Grid */
+  background-image: url("data:image/svg+xml,%3Csvg width='56' height='98' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100M0 50L-28 66L-28 100M56 50L84 66L84 100' stroke='rgba(46,52,64,0.15)' stroke-width='1' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E");
+  background-size: 42px 73.5px; /* Scaled down slightly */
   font-family: "IBM Plex Mono", monospace;
   color: var(--graphite);
   display: flex;
@@ -50,13 +54,22 @@ body {
 }
 
 :focus-visible {
-  outline: 1px solid var(--red-pencil);
-  outline-offset: 3px;
+  outline: 1px solid var(--blueprint);
+  outline-offset: 2px;
 }
 
-/* Base utility overrides for origami style */
+/* Base utility overrides for soft technical style */
 * {
-  border-radius: 0 !important; /* Force origami sharp corners globally */
+  border-radius: 4px; /* Soften the corners globally */
+}
+
+/* Mechanical Press Effect for Buttons */
+button {
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+button:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px transparent !important;
 }
 
 /* App Layout Container */
