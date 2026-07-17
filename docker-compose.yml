@@ -10,8 +10,7 @@ services:
     restart: unless-stopped
     env_file:
       - backend/.env  # Inject environment variables (CLOUDFLARE_API_TOKEN, dll)
-    ports:
-      - "8000:8000"
+    network_mode: "host"
     volumes:
       - loreforge_data:/app/backend/data
       - loreforge_media:/app/backend/media
