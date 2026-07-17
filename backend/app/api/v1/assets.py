@@ -1,9 +1,18 @@
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Form, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Form, HTTPException, UploadFile, status
+from fastapi.exceptions import RequestValidationError
+from pydantic import ValidationError
 
 from app.api.deps import AssetServiceDep, SessionDep
-from app.models.asset import AssetCreate, AssetCreateForm, AssetEvolve, AssetRead
+from app.models.asset import (
+    AssetCategory,
+    AssetCreate,
+    AssetCreateForm,
+    AssetEvolve,
+    AssetRead,
+    AssetStyle,
+)
 from app.services.image_utils import validate_and_read_image
 from app.workers.image_worker import generate_image_task
 
@@ -15,13 +24,26 @@ def create_asset(
     background_tasks: BackgroundTasks,
     session_id: SessionDep,
     service: AssetServiceDep,
-    form_data: Annotated[AssetCreateForm, Form()],
+    category: Annotated[AssetCategory, Form()],
+    style: Annotated[AssetStyle, Form()],
+    prompt: Annotated[str, Form()] = "",
+    reference_image: UploadFile | None = None,
+    existing_reference_id: Annotated[str | None, Form()] = None,
+    sibling_id: Annotated[str | None, Form()] = None,
 ) -> AssetRead:
-    if service.has_pending_assets(session_id):
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="You already have a generation in progress. Please wait.",
+
+    try:
+        form_data = AssetCreateForm(
+            category=category,
+            style=style,
+            prompt=prompt,
+            reference_image=reference_image,
+            existing_reference_id=existing_reference_id,
+            sibling_id=sibling_id,
         )
+    except ValidationError as e:
+        # Re-raise as FastAPI HTTP 422
+        raise RequestValidationError(e.errors()) from e
 
     data = AssetCreate(
         prompt=form_data.prompt,
@@ -64,36 +86,10 @@ def evolve_asset(
     service: AssetServiceDep,
     data: AssetEvolve,
 ) -> AssetRead:
-    if service.has_pending_assets(session_id):
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="You already have a generation in progress. Please wait.",
-        )
 
     asset = service.evolve_asset(asset_id, session_id, data)
     if not asset:
         raise HTTPException(status_code=404, detail="Parent asset not found")
-
-    background_tasks.add_task(generate_image_task, asset.id, session_id)
-    return asset
-
-
-@router.post("/{asset_id}/retry", status_code=status.HTTP_202_ACCEPTED)
-def retry_asset(
-    asset_id: str,
-    background_tasks: BackgroundTasks,
-    session_id: SessionDep,
-    service: AssetServiceDep,
-) -> AssetRead:
-    if service.has_pending_assets(session_id):
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="You already have a generation in progress. Please wait.",
-        )
-
-    asset = service.retry_asset(asset_id, session_id)
-    if not asset:
-        raise HTTPException(status_code=404, detail="Failed asset not found")
 
     background_tasks.add_task(generate_image_task, asset.id, session_id)
     return asset

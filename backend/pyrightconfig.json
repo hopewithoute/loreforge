@@ -3,7 +3,7 @@
   "exclude": [".venv", "data"],
   "venvPath": ".",
   "venv": ".venv",
-  "pythonVersion": "3.12",
+  "pythonVersion": "3.14",
   "typeCheckingMode": "standard",
   "executionEnvironments": [
     {

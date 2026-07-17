@@ -40,7 +40,21 @@ cd frontend
 npm run dev &
 cd ..
 
-echo -e "${GREEN}✨ Both servers are running. Press Ctrl+C to stop.${NC}"
+# Wait briefly for Vite to output its startup logs so our summary stays at the bottom
+sleep 2
+
+echo -e ""
+echo -e "${GREEN}======================================================${NC}"
+echo -e "${GREEN}✨ LoreForge Development Environment is Live!${NC}"
+echo -e "${GREEN}======================================================${NC}"
+echo -e "${BLUE}▶ Frontend (UI):${NC}    http://localhost:5173"
+echo -e "${BLUE}▶ Backend (API):${NC}    http://localhost:8000/docs"
+echo -e "${GREEN}======================================================${NC}"
+echo -e "${YELLOW}Press Ctrl+C to stop both servers gracefully.${NC}"
+# Wait briefly for Vite to output its startup logs so our summary stays at the bottom
+sleep 2
+
+echo -e ""
 
 # Wait for background processes
 wait

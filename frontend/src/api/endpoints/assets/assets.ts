@@ -75,33 +75,32 @@ export const createAsset = async (
   assetCreateForm: AssetCreateForm,
   options?: RequestInit,
 ): Promise<createAssetResponse> => {
-  const formUrlEncoded = new URLSearchParams();
-  formUrlEncoded.append(`category`, assetCreateForm.category);
-  formUrlEncoded.append(`style`, assetCreateForm.style);
+  const formData = new FormData();
+  formData.append(`category`, assetCreateForm.category);
+  formData.append(`style`, assetCreateForm.style);
   if (assetCreateForm.prompt !== undefined) {
-    formUrlEncoded.append(`prompt`, assetCreateForm.prompt);
+    formData.append(`prompt`, assetCreateForm.prompt);
   }
   if (
     assetCreateForm.reference_image !== undefined &&
     assetCreateForm.reference_image !== null
   ) {
-    formUrlEncoded.append(`reference_image`, assetCreateForm.reference_image);
+    formData.append(`reference_image`, assetCreateForm.reference_image);
   }
   if (
     assetCreateForm.existing_reference_id !== undefined &&
     assetCreateForm.existing_reference_id !== null
   ) {
-    formUrlEncoded.append(`existing_reference_id`, assetCreateForm.existing_reference_id);
+    formData.append(`existing_reference_id`, assetCreateForm.existing_reference_id);
   }
   if (assetCreateForm.sibling_id !== undefined && assetCreateForm.sibling_id !== null) {
-    formUrlEncoded.append(`sibling_id`, assetCreateForm.sibling_id);
+    formData.append(`sibling_id`, assetCreateForm.sibling_id);
   }
 
   return customFetch<createAssetResponse>(getCreateAssetUrl(), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded", ...options?.headers },
-    body: formUrlEncoded,
+    body: formData,
   });
 };
 
@@ -413,108 +412,6 @@ export const useEvolveAsset = <TError = HTTPValidationError, TContext = unknown>
   TContext
 > => {
   return useMutation(getEvolveAssetMutationOptions(options), queryClient);
-};
-export type retryAssetResponse202 = {
-  data: AssetRead;
-  status: 202;
-};
-
-export type retryAssetResponse422 = {
-  data: HTTPValidationError;
-  status: 422;
-};
-
-export type retryAssetResponseSuccess = retryAssetResponse202 & {
-  headers: Headers;
-};
-export type retryAssetResponseError = retryAssetResponse422 & {
-  headers: Headers;
-};
-
-export type retryAssetResponse = retryAssetResponseSuccess | retryAssetResponseError;
-
-export const getRetryAssetUrl = (assetId: string) => {
-  return `/api/assets/${assetId}/retry`;
-};
-
-/**
- * @summary Retry Asset
- */
-export const retryAsset = async (
-  assetId: string,
-  options?: RequestInit,
-): Promise<retryAssetResponse> => {
-  return customFetch<retryAssetResponse>(getRetryAssetUrl(assetId), {
-    ...options,
-    method: "POST",
-  });
-};
-
-export const getRetryAssetMutationOptions = <
-  TError = HTTPValidationError,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof retryAsset>>,
-    TError,
-    { assetId: string },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof retryAsset>>,
-  TError,
-  { assetId: string },
-  TContext
-> => {
-  const mutationKey = ["retryAsset"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof retryAsset>>,
-    { assetId: string }
-  > = (props) => {
-    const { assetId } = props ?? {};
-
-    return retryAsset(assetId, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type RetryAssetMutationResult = NonNullable<
-  Awaited<ReturnType<typeof retryAsset>>
->;
-
-export type RetryAssetMutationError = HTTPValidationError;
-
-/**
- * @summary Retry Asset
- */
-export const useRetryAsset = <TError = HTTPValidationError, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof retryAsset>>,
-      TError,
-      { assetId: string },
-      TContext
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof retryAsset>>,
-  TError,
-  { assetId: string },
-  TContext
-> => {
-  return useMutation(getRetryAssetMutationOptions(options), queryClient);
 };
 export type getAssetResponse200 = {
   data: AssetRead;

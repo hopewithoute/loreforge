@@ -3,9 +3,6 @@
 import type { AssetCategory } from "./assetCategory";
 import type { AssetStyle } from "./assetStyle";
 
-/**
- * Centralized Pydantic model for validating the multipart/form-data request shape and rules
- */
 export interface AssetCreateForm {
   category: AssetCategory;
   style: AssetStyle;

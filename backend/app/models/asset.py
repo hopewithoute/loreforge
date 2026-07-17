@@ -30,7 +30,7 @@ class AssetCreateForm(BaseModel):
     category: AssetCategory
     style: AssetStyle
     prompt: str = ""
-    reference_image: UploadFile | None = None
+    reference_image: UploadFile | None = Field(default=None, json_schema_extra={"format": "binary"})
     existing_reference_id: str | None = None
     sibling_id: str | None = None
 

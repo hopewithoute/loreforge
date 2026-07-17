@@ -69,13 +69,27 @@ def create_app() -> FastAPI:
         # We manually patch it to multipart/form-data for /api/assets/ to support file uploads.
         for path, path_item in openapi_schema.get("paths", {}).items():
             if path.startswith("/api/assets/"):
-                for operation in path_item.items():
+                for operation in path_item.values():
                     if "requestBody" in operation and "content" in operation["requestBody"]:
                         content = operation["requestBody"]["content"]
                         if "application/x-www-form-urlencoded" in content:
                             content["multipart/form-data"] = content.pop(
                                 "application/x-www-form-urlencoded"
                             )
+
+        # Rename Body_create_asset to AssetCreateForm for better frontend typings
+        schemas = openapi_schema.get("components", {}).get("schemas", {})
+        if "Body_create_asset" in schemas:
+            schemas["AssetCreateForm"] = schemas.pop("Body_create_asset")
+            schemas["AssetCreateForm"]["title"] = "AssetCreateForm"
+
+            # Update the reference
+            post_op = openapi_schema["paths"].get("/api/assets/", {}).get("post", {})
+            req_body = post_op.get("requestBody", {}).get("content", {})
+            if "multipart/form-data" in req_body:
+                req_body["multipart/form-data"]["schema"]["$ref"] = (
+                    "#/components/schemas/AssetCreateForm"
+                )
 
         application.openapi_schema = openapi_schema
         return application.openapi_schema

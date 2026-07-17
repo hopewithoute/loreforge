@@ -54,7 +54,7 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/x-www-form-urlencoded": {
+            "multipart/form-data": {
               "schema": {
                 "$ref": "#/components/schemas/AssetCreateForm"
               }
@@ -204,64 +204,6 @@
         }
       }
     },
-    "/api/assets/{asset_id}/retry": {
-      "post": {
-        "tags": [
-          "assets"
-        ],
-        "summary": "Retry Asset",
-        "operationId": "retry_asset",
-        "parameters": [
-          {
-            "name": "asset_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Asset Id"
-            }
-          },
-          {
-            "name": "session_id",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Session Id"
-            }
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AssetRead"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/assets/{asset_id}": {
       "get": {
         "tags": [
@@ -380,62 +322,6 @@
           "prop"
         ],
         "title": "AssetCategory"
-      },
-      "AssetCreateForm": {
-        "properties": {
-          "category": {
-            "$ref": "#/components/schemas/AssetCategory"
-          },
-          "style": {
-            "$ref": "#/components/schemas/AssetStyle"
-          },
-          "prompt": {
-            "type": "string",
-            "title": "Prompt",
-            "default": ""
-          },
-          "reference_image": {
-            "anyOf": [
-              {
-                "type": "string",
-                "contentMediaType": "application/octet-stream"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reference Image"
-          },
-          "existing_reference_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Existing Reference Id"
-          },
-          "sibling_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Sibling Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "category",
-          "style"
-        ],
-        "title": "AssetCreateForm",
-        "description": "Centralized Pydantic model for validating the multipart/form-data request shape and rules"
       },
       "AssetEvolve": {
         "properties": {
@@ -711,6 +597,61 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "AssetCreateForm": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/AssetCategory"
+          },
+          "style": {
+            "$ref": "#/components/schemas/AssetStyle"
+          },
+          "prompt": {
+            "type": "string",
+            "title": "Prompt",
+            "default": ""
+          },
+          "reference_image": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Image"
+          },
+          "existing_reference_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Existing Reference Id"
+          },
+          "sibling_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sibling Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "style"
+        ],
+        "title": "AssetCreateForm"
       }
     }
   }

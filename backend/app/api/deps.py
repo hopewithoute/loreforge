@@ -29,7 +29,7 @@ def get_session_id(
     If it doesn't exist, generates a new UUID and sets it.
     """
     if not session_id:
-        session_id = str(uuid.uuid4())
+        session_id = str(uuid.uuid7())
         response.set_cookie(
             key="session_id",
             value=session_id,
