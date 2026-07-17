@@ -38,7 +38,13 @@ function buildEvolutionTree(root: Asset, allItems: Asset[]): EvolutionNode {
   /**
    * Recursively constructs a node and attaches its children.
    */
-  function buildNode(groupId: string): EvolutionNode {
+  function buildNode(groupId: string, visited: Set<string>): EvolutionNode {
+    if (visited.has(groupId)) {
+      console.warn("Circular reference detected in evolution tree for group:", groupId);
+      return { groupId, siblings: [], children: [] };
+    }
+    visited.add(groupId);
+
     const siblings = siblingGroups.get(groupId) || [];
     const siblingIds = new Set(siblings.map((s) => s.id));
 
@@ -46,14 +52,13 @@ function buildEvolutionTree(root: Asset, allItems: Asset[]): EvolutionNode {
     const childGroups = new Set<string>();
     for (const asset of allItems) {
       if (asset.parent_id && siblingIds.has(asset.parent_id)) {
-        // We only store the groupId to avoid duplicates (multiple siblings might spawn children in the same sibling group, though rare)
         childGroups.add(asset.sibling_id || asset.id);
       }
     }
 
     // Recursively build the child nodes
     const children = Array.from(childGroups).map((childGroupId) =>
-      buildNode(childGroupId),
+      buildNode(childGroupId, new Set(visited)),
     );
 
     return {
@@ -63,7 +68,7 @@ function buildEvolutionTree(root: Asset, allItems: Asset[]): EvolutionNode {
     };
   }
 
-  return buildNode(rootGroupId);
+  return buildNode(rootGroupId, new Set());
 }
 
 export function GalleryBoard() {
@@ -75,20 +80,50 @@ export function GalleryBoard() {
 
   const items = gallery || [];
 
-  // A track root is an asset that started from scratch (no parent and no sibling).
-  // These become the vertical columns in the Gallery.
-  const trackRoots = items.filter((item) => !item.parent_id && !item.sibling_id);
+  // A track root is a sibling group that started from scratch (no parent).
+  // If the original root asset was deleted, its siblings will still share the same sibling_id
+  // and will not have a parent_id, so we group them together to form the track roots.
+  const trackRootGroups = new Map<string, Asset>();
+  items.forEach((item) => {
+    if (!item.parent_id) {
+      const groupId = item.sibling_id || item.id;
+      if (!trackRootGroups.has(groupId)) {
+        trackRootGroups.set(groupId, item);
+      }
+    }
+  });
+  const trackRoots = Array.from(trackRootGroups.values());
 
   if (trackRoots.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center p-10 pb-[15vh]">
         <Logo className="h-64 w-64 opacity-[0.04] brightness-0 grayscale" />
-        <h2 className="mt-8 font-['Playfair_Display',serif] text-3xl text-(--graphite) italic opacity-60">
-          The Forge is Cold.
+        <h2 className="mt-8 font-mono text-xl font-bold tracking-[2px] text-(--graphite) uppercase opacity-60">
+          [ WORKSPACE_EMPTY ]
         </h2>
-        <p className="mt-4 font-sans text-sm tracking-[0.2em] text-(--pencil-gray) uppercase opacity-50">
-          Enter a prompt in the station to strike the anvil
-        </p>
+        <div className="mt-8 w-full max-w-md rounded-md border border-[rgba(15,23,42,0.1)] bg-[rgba(15,23,42,0.02)] p-5 font-mono text-xs text-(--graphite)">
+          <p className="mb-4 border-b border-[rgba(15,23,42,0.1)] pb-2 font-bold tracking-[1px] uppercase">
+            // Standard Operating Procedure
+          </p>
+          <ul className="flex flex-col gap-3 leading-relaxed opacity-80">
+            <li>
+              <span className="mr-2 font-bold text-(--blueprint)">01. DEFINE</span> Input
+              target specifications in the parameters terminal.
+            </li>
+            <li>
+              <span className="mr-2 font-bold text-(--blueprint)">02. CLASSIFY</span>{" "}
+              Assign the correct asset category and visual style.
+            </li>
+            <li>
+              <span className="mr-2 font-bold text-(--blueprint)">03. PROVIDE</span>{" "}
+              (Optional) Attach a reference schematic or sketch.
+            </li>
+            <li>
+              <span className="mr-2 font-bold text-(--blueprint)">04. EXECUTE</span> Click
+              "INITIALIZE RENDER" to begin synthesis.
+            </li>
+          </ul>
+        </div>
       </div>
     );
   }

@@ -20,8 +20,8 @@ export type GeneratorFormValues = {
   sibling_id: string;
   previewUrl: string | null;
   fileName: string | null;
+  reference_image?: FileList | null;
   evolveTarget: EvolveTarget | null;
-  fileInputResetKey: number;
   isLockedMode: boolean;
 };
 

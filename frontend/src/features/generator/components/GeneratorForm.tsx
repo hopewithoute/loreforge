@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useFormContext } from "react-hook-form";
 import type { GeneratorFormValues } from "@/features/generator/types";
 import {
@@ -14,34 +14,10 @@ import { type AssetCreateForm } from "@/api/model";
 interface GeneratorFormProps {
   onSubmit: (payload: AssetCreateForm, evolveParentId?: string) => void;
   isPending: boolean;
+  serverError?: string | null;
 }
 
-const handleDragOver = (e: React.DragEvent<HTMLButtonElement>) => {
-  e.preventDefault();
-  e.stopPropagation();
-};
-
-const handleDrop = (e: React.DragEvent<HTMLButtonElement>) => {
-  e.preventDefault();
-  e.stopPropagation();
-
-  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-    const file = e.dataTransfer.files[0];
-    if (file.type.startsWith("image/")) {
-      const fileInput = document.getElementById("reference_image") as HTMLInputElement;
-      if (fileInput) {
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        fileInput.files = dataTransfer.files;
-
-        const event = new Event("change", { bubbles: true });
-        fileInput.dispatchEvent(event);
-      }
-    }
-  }
-};
-
-export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
+export function GeneratorForm({ onSubmit, isPending, serverError }: GeneratorFormProps) {
   const { register, handleSubmit, setValue, watch, reset } =
     useFormContext<GeneratorFormValues>();
 
@@ -51,30 +27,48 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
   const fileName = watch("fileName");
   const evolveTarget = watch("evolveTarget");
   const siblingId = watch("sibling_id");
-  const fileInputResetKey = watch("fileInputResetKey");
   const watchCategory = watch("category");
   const watchStyle = watch("style");
   const isLockedMode = watch("isLockedMode");
+  const referenceImage = watch("reference_image");
 
   const isFormLocked = !!evolveTarget || isLockedMode;
+
+  const prevIsPending = useRef(isPending);
+
+  useEffect(() => {
+    if (prevIsPending.current && !isPending) {
+      reset();
+      setValue("isLockedMode", false);
+    }
+    prevIsPending.current = isPending;
+  }, [isPending, reset, setValue]);
+
+  useEffect(() => {
+    if (referenceImage && referenceImage.length > 0) {
+      const file = referenceImage[0];
+      const objUrl = URL.createObjectURL(file);
+      setValue("fileName", file.name);
+      setValue("previewUrl", objUrl);
+      setValue("existing_reference_id", "");
+      setValue("isLockedMode", false);
+      return () => URL.revokeObjectURL(objUrl);
+    }
+  }, [referenceImage, setValue]);
 
   // Assemble all fields into a single payload when user submits.
   // This function decides whether we are creating a fresh asset,
   // retrying with an existing reference, or evolving an existing asset.
   const onFormSubmit = (data: GeneratorFormValues) => {
     setLocalError(null);
-    const fileInput = document.getElementById("reference_image") as HTMLInputElement;
-    const refImage = fileInput?.files?.[0];
+    const refImage = data.reference_image?.[0];
 
-    if (
-      !data.prompt.trim() &&
-      (!refImage || refImage.size === 0) &&
-      !data.existing_reference_id &&
-      !evolveTarget
-    ) {
-      setLocalError(
-        "Please provide either a Director's Notes (Prompt) or a Reference Sketch.",
-      );
+    const hasPrompt = Boolean(data.prompt.trim());
+    const hasUploadedImage = Boolean(refImage && refImage.size > 0);
+    const hasExistingImage = Boolean(data.existing_reference_id || evolveTarget);
+
+    if (!hasPrompt && !hasUploadedImage && !hasExistingImage) {
+      setLocalError("Please provide either a Prompt or a Reference image.");
       return;
     }
 
@@ -84,10 +78,17 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
       style: data.style,
     };
 
-    if (data.existing_reference_id)
+    if (data.existing_reference_id) {
       payload.existing_reference_id = data.existing_reference_id;
-    if (data.sibling_id) payload.sibling_id = data.sibling_id;
-    if (refImage) payload.reference_image = refImage;
+    }
+    
+    if (data.sibling_id) {
+      payload.sibling_id = data.sibling_id;
+    }
+    
+    if (refImage) {
+      payload.reference_image = refImage;
+    }
 
     // If an evolve target is active, we route to the Evolve API via the callback
     // and then clear the evolve state so the form resets.
@@ -100,23 +101,36 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
   };
 
   const clearFileState = () => {
-    if (previewUrl && previewUrl.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
+    setValue("reference_image", null);
     setValue("fileName", null);
     setValue("previewUrl", null);
     setValue("existing_reference_id", "");
     setValue("isLockedMode", false);
   };
 
+  const { onChange: rhfOnChange, ...rhfRefProps } = register("reference_image");
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      const objUrl = URL.createObjectURL(file);
-      setValue("fileName", file.name);
-      setValue("previewUrl", objUrl);
-      setValue("existing_reference_id", "");
-      setValue("isLockedMode", false);
-    } else {
+    void rhfOnChange(e);
+    if (!e.target.files || e.target.files.length === 0) {
       clearFileState();
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith("image/")) {
+        setValue("reference_image", e.dataTransfer.files);
+      }
     }
   };
 
@@ -124,12 +138,10 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
     e.stopPropagation();
     e.preventDefault();
     clearFileState();
-    setValue("fileInputResetKey", fileInputResetKey + 1);
   };
 
   const handleCancelEvolve = () => {
     reset();
-    setValue("fileInputResetKey", fileInputResetKey + 1);
     setValue("isLockedMode", false);
   };
 
@@ -152,22 +164,16 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
       <PromptField {...register("prompt")} disabled={isPending} />
 
       <ReferenceUpload
+        {...rhfRefProps}
         fileName={fileName}
         previewUrl={previewUrl}
         evolveTarget={evolveTarget}
         disabled={isPending}
-        onFileChange={handleFileChange}
+        onChange={handleFileChange}
         onClearFile={handleClearFile}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
-        fileInputResetKey={fileInputResetKey}
       />
-
-      {localError && (
-        <div className="mb-2 border border-(--red-pencil) bg-[rgba(189,49,36,0.05)] p-2 text-center font-mono text-[0.75rem] text-(--red-pencil)">
-          {localError}
-        </div>
-      )}
 
       <SubmitControls
         isPending={isPending}
@@ -175,6 +181,12 @@ export function GeneratorForm({ onSubmit, isPending }: GeneratorFormProps) {
         siblingId={siblingId}
         onCancelEvolve={handleCancelEvolve}
       />
+
+      {(localError || serverError) && (
+        <div className="mt-3 border border-(--red-pencil) bg-[rgba(189,49,36,0.05)] p-3 font-mono text-[0.75rem] text-(--red-pencil)">
+          [Error] {localError || serverError}
+        </div>
+      )}
     </form>
   );
 }

@@ -10,9 +10,7 @@ const mockConfirm = vi.fn();
 vi.mock("@/features/generator/api/useAssetStatus", () => ({
   useAssetStatus: () => ({ data: undefined }),
 }));
-vi.mock("@/features/generator/api/useRetryAsset", () => ({
-  useRetryAsset: () => ({ mutate: vi.fn(), isPending: false }),
-}));
+
 vi.mock("@/features/generator/api/useDeleteAsset", () => ({
   useDeleteAsset: () => ({ mutate: mockDeleteMutate, isPending: false }),
 }));
@@ -20,7 +18,7 @@ vi.mock("@/app/ConfirmContext", () => ({
   useConfirm: () => mockConfirm,
 }));
 const mockOpenLightbox = vi.fn();
-vi.mock("./LightboxContext", () => ({
+vi.mock("@/app/LightboxContext", () => ({
   useLightbox: () => ({ openLightbox: mockOpenLightbox, closeLightbox: vi.fn() }),
 }));
 vi.mock("@/lib/utils", () => ({
@@ -140,7 +138,7 @@ describe("CanvasCard - Lineage Lockdown (Ground Truth)", () => {
     expect(mockSetValue).toHaveBeenCalledWith("fileName", "[ Evolving Parent ]");
   });
 
-  it("should show error UI and RETRY buttons when status is failed", () => {
+  it("should show error UI and RETRY button when status is failed", () => {
     const asset = createAsset({
       status: "failed",
       error_code: "CUDA_OUT_OF_MEMORY",
@@ -151,10 +149,7 @@ describe("CanvasCard - Lineage Lockdown (Ground Truth)", () => {
     expect(screen.getByText("CUDA_OUT_OF_MEMORY")).toBeInTheDocument();
     expect(screen.getByText("VRAM exploded")).toBeInTheDocument();
 
-    const retryRenderButton = screen.getByRole("button", { name: /RETRY RENDER/i });
     const retryFormButton = screen.getByRole("button", { name: /^RETRY$/i });
-
-    expect(retryRenderButton).toBeInTheDocument();
     expect(retryFormButton).toBeInTheDocument();
   });
 });

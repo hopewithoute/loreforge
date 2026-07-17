@@ -46,9 +46,7 @@ describe("GeneratorForm", () => {
 
     // Expect validation error
     await waitFor(() => {
-      expect(
-        screen.getByText(/Please provide either a Director's Notes/i),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Please provide either a Prompt/i)).toBeInTheDocument();
     });
 
     // Ensure API was not called
@@ -66,7 +64,7 @@ describe("GeneratorForm", () => {
     );
 
     // Type a prompt
-    const promptInput = screen.getByPlaceholderText(/Describe the concept/i);
+    const promptInput = screen.getByPlaceholderText(/Input target asset specifications/i);
     await user.type(promptInput, "A brave knight");
 
     // Submit form

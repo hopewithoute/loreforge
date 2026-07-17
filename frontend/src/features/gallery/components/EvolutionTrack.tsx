@@ -180,7 +180,7 @@ export function EvolutionTrack({ tree }: EvolutionTrackProps) {
     <div className="relative flex w-full min-w-0 flex-col gap-5">
       <div className="flex items-baseline justify-between border-b border-[rgba(28,28,26,0.1)] pb-2 text-[0.85rem] text-(--pencil-gray)">
         <span>Lineage // {rootAsset.prompt.substring(0, 30)}...</span>
-        <span className="font-['Caveat',cursive] text-[1.4rem] text-(--blueprint) capitalize">
+        <span className="font-mono text-sm font-bold tracking-wider text-(--blueprint) uppercase">
           {rootAsset.category} • {rootAsset.style.replace(/_/g, " ")}
         </span>
       </div>
@@ -216,7 +216,7 @@ export function EvolutionTrack({ tree }: EvolutionTrackProps) {
               "opacity-30 transition-opacity outline-none hover:opacity-60",
             )}
             style={{
-              background: `linear-gradient(to right, var(--red-pencil) 0%, var(--red-pencil) ${scrollProgress}%, var(--pencil-gray) ${scrollProgress}%, var(--pencil-gray) 100%)`,
+              background: `linear-gradient(to right, var(--blueprint) 0%, var(--blueprint) ${scrollProgress}%, var(--pencil-gray) ${scrollProgress}%, var(--pencil-gray) 100%)`,
             }}
           />
         </div>

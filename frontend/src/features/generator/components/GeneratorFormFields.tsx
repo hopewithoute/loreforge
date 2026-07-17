@@ -1,6 +1,7 @@
+import * as React from "react";
 import { CATEGORY_OPTIONS, STYLE_OPTIONS } from "@/features/generator/types";
 import { cn } from "@/lib/utils";
-import { ArrowRightIcon } from "@/components/Icons";
+import { ArrowRightIcon, LockIcon } from "@/components/Icons";
 import type { AssetCategory, AssetStyle, EvolveTarget } from "@/features/generator/types";
 
 interface CategorySelectorProps {
@@ -22,10 +23,10 @@ export function CategorySelector({
         htmlFor="category_group"
         className="mb-2.5 flex items-center gap-2 text-xs font-semibold tracking-[1px] text-(--pencil-gray) uppercase"
       >
-        Subject Category
+        ASSET CATEGORY
         {isLocked && (
           <span title="Locked to parent lineage" className="text-[10px]">
-            🔒
+            <LockIcon className="opacity-80" />
           </span>
         )}
       </label>
@@ -38,9 +39,9 @@ export function CategorySelector({
             onClick={() => onChange(opt.value)}
             disabled={disabled}
             className={cn(
-              "cursor-pointer border border-(--graphite) bg-transparent px-3 py-1.5",
+              "cursor-pointer rounded-md border border-[rgba(15,23,42,0.15)] bg-transparent px-3 py-1.5",
               "font-mono text-xs text-(--graphite) transition-all duration-200",
-              "hover:bg-[rgba(28,28,26,0.05)] disabled:opacity-50",
+              "hover:bg-[rgba(15,23,42,0.05)] disabled:opacity-50",
               value === opt.value && "bg-(--graphite)! text-(--paper)!",
             )}
           >
@@ -71,10 +72,10 @@ export function StyleSelector({
         htmlFor="style_group"
         className="mb-2.5 flex items-center gap-2 text-xs font-semibold tracking-[1px] text-(--pencil-gray) uppercase"
       >
-        Art Style
+        OUTPUT STYLE
         {isLocked && (
           <span title="Locked to parent lineage" className="text-[10px]">
-            🔒
+            <LockIcon className="opacity-80" />
           </span>
         )}
       </label>
@@ -87,9 +88,9 @@ export function StyleSelector({
             onClick={() => onChange(opt.value)}
             disabled={disabled}
             className={cn(
-              "cursor-pointer border border-(--graphite) bg-transparent px-3 py-1.5",
+              "cursor-pointer rounded-md border border-[rgba(15,23,42,0.15)] bg-transparent px-3 py-1.5",
               "font-mono text-xs text-(--graphite) transition-all duration-200",
-              "hover:bg-[rgba(28,28,26,0.05)] disabled:opacity-50",
+              "hover:bg-[rgba(15,23,42,0.05)] disabled:opacity-50",
               value === opt.value &&
                 "border-(--blueprint)! bg-(--blueprint)! text-(--paper)!",
             )}
@@ -114,18 +115,18 @@ export const PromptField = forwardRef<HTMLTextAreaElement, PromptFieldProps>(
           htmlFor="prompt"
           className="mb-2.5 block text-xs font-semibold tracking-[1px] text-(--pencil-gray) uppercase"
         >
-          Director's Notes
+          GENERATION PARAMETERS
         </label>
         <textarea
           id="prompt"
           disabled={disabled}
           ref={ref}
-          placeholder="Describe the concept here..."
+          placeholder="> Input target asset specifications and visual parameters..."
           className={cn(
-            "custom-scrollbar box-border min-h-30 w-full resize-y border border-(--graphite) bg-transparent p-3",
-            "font-['Caveat',cursive] text-[1.4rem] leading-[1.2] text-(--blueprint)",
-            "transition-all duration-200 focus:border-(--blueprint) focus:bg-[rgba(255,255,255,0.5)]",
-            "focus:shadow-[-4px_4px_0px_rgba(42,92,139,0.1)] focus:outline-none disabled:opacity-50",
+            "custom-scrollbar box-border min-h-30 w-full resize-y rounded-md border border-[rgba(15,23,42,0.15)] bg-transparent p-3",
+            "font-mono text-xs leading-relaxed text-(--graphite)",
+            "transition-all duration-200 focus:border-(--blueprint) focus:bg-[rgba(255,255,255,0.8)]",
+            "focus:shadow-[0_0_10px_rgba(129,161,193,0.2)] focus:outline-none! focus:ring-0! focus:ring-transparent! disabled:opacity-50",
             className,
           )}
           {...props}
@@ -136,106 +137,113 @@ export const PromptField = forwardRef<HTMLTextAreaElement, PromptFieldProps>(
 );
 PromptField.displayName = "PromptField";
 
-interface ReferenceUploadProps {
+interface ReferenceUploadProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "onDragOver" | "onDrop"
+> {
   fileName: string | null;
   previewUrl: string | null;
   evolveTarget: EvolveTarget | null;
-  disabled: boolean;
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onClearFile: (e: React.MouseEvent | React.KeyboardEvent) => void;
   onDragOver: (e: React.DragEvent<HTMLButtonElement>) => void;
   onDrop: (e: React.DragEvent<HTMLButtonElement>) => void;
-  fileInputResetKey: number;
 }
 
-export function ReferenceUpload({
-  fileName,
-  previewUrl,
-  evolveTarget,
-  disabled,
-  onFileChange,
-  onClearFile,
-  onDragOver,
-  onDrop,
-  fileInputResetKey,
-}: ReferenceUploadProps) {
-  return (
-    <div className="form-group relative mb-6">
-      <label
-        htmlFor="reference_image"
-        className="mb-2.5 block text-xs font-semibold tracking-[1px] text-(--pencil-gray) uppercase"
-      >
-        {evolveTarget ? "Evolving from Parent Image" : "Reference Sketch"}
-      </label>
-      <input
-        key={fileInputResetKey}
-        type="file"
-        id="reference_image"
-        name="reference_image"
-        accept="image/png, image/jpeg"
-        disabled={disabled || !!evolveTarget}
-        className="hidden"
-        onChange={onFileChange}
-      />
-
-      {fileName && !disabled && !evolveTarget && (
-        <div className="absolute top-2 right-2 z-20">
-          <button
-            type="button"
-            className="cursor-pointer border border-(--graphite) bg-(--paper) px-2 py-1 text-xs font-bold text-(--red-pencil) transition-colors hover:text-red-700"
-            onClick={onClearFile}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") onClearFile(e);
-            }}
+export const ReferenceUpload = React.forwardRef<HTMLInputElement, ReferenceUploadProps>(
+  (
+    {
+      fileName,
+      previewUrl,
+      evolveTarget,
+      onClearFile,
+      onDragOver,
+      onDrop,
+      className,
+      disabled,
+      ...props
+    },
+    ref,
+  ) => {
+    return (
+      <div className="form-group relative mb-6">
+        <div className="mb-2.5 flex items-end justify-between">
+          <label
+            htmlFor="reference_image"
+            className="block text-xs font-semibold tracking-[1px] text-(--pencil-gray) uppercase"
           >
-            × CLEAR
-          </button>
-        </div>
-      )}
+            {evolveTarget ? "Evolving from Parent Image" : "REFERENCE"}
+          </label>
 
-      <button
-        type="button"
-        disabled={disabled || !!evolveTarget}
-        className={cn(
-          "relative flex w-full cursor-pointer justify-center overflow-hidden border border-dashed",
-          "border-(--pencil-gray) bg-transparent p-3.75 text-center text-xs tracking-[1px]",
-          "text-(--pencil-gray) uppercase transition-all duration-200",
-          "hover:border-solid hover:border-(--graphite) hover:bg-[rgba(28,28,26,0.03)] hover:text-(--graphite)",
-          evolveTarget
-            ? "cursor-not-allowed border-solid border-(--blueprint) bg-[rgba(42,92,139,0.05)] opacity-100 hover:border-(--blueprint)"
-            : "disabled:opacity-50",
-        )}
-        onClick={() => {
-          if (!evolveTarget) {
-            const fileInput = document.getElementById(
-              "reference_image",
-            ) as HTMLInputElement;
-            if (fileInput) fileInput.click();
-          }
-        }}
-        onDragOver={!evolveTarget ? onDragOver : undefined}
-        onDrop={!evolveTarget ? onDrop : undefined}
-      >
-        {previewUrl ? (
-          <div className="relative flex h-30 w-full items-center justify-center">
-            <img
-              src={previewUrl}
-              alt={fileName || "Reference Sketch"}
-              className="max-h-30 max-w-full object-contain contrast-125 saturate-50"
-            />
-            <div className="absolute -bottom-3.75 bg-[rgba(28,28,26,0.8)] px-3 py-1 font-mono text-[0.6rem] text-(--paper)">
-              {fileName}
+          {fileName && !disabled && !evolveTarget && (
+            <button
+              type="button"
+              className="cursor-pointer font-mono text-[0.65rem] font-bold tracking-[1px] text-(--red-pencil) uppercase transition-colors hover:text-red-700"
+              onClick={onClearFile}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") onClearFile(e);
+              }}
+            >
+              [ CLEAR ]
+            </button>
+          )}
+        </div>
+        <input
+          type="file"
+          id="reference_image"
+          accept="image/png, image/jpeg"
+          className={cn("hidden", className)}
+          ref={ref}
+          disabled={disabled || !!evolveTarget}
+          {...props}
+        />
+
+        <button
+          type="button"
+          disabled={disabled || !!evolveTarget}
+          className={cn(
+            "relative flex w-full cursor-pointer justify-center overflow-hidden rounded-md border border-[rgba(15,23,42,0.15)]",
+            "bg-transparent p-3.75 text-center text-xs tracking-[1px]",
+            "text-(--pencil-gray) uppercase transition-all duration-200",
+            "hover:border-(--blueprint) hover:bg-[rgba(255,255,255,0.8)] hover:text-(--blueprint) hover:shadow-[0_0_10px_rgba(129,161,193,0.2)]",
+            evolveTarget
+              ? "cursor-not-allowed border-(--blueprint) bg-[rgba(42,92,139,0.05)] opacity-100 hover:border-(--blueprint) hover:shadow-none bg-none!"
+              : "disabled:opacity-50",
+          )}
+          style={{
+            backgroundImage: evolveTarget
+              ? "none"
+              : "repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(15,23,42,0.03) 8px, rgba(15,23,42,0.03) 16px)",
+          }}
+          onClick={() => {
+            if (!evolveTarget) {
+              const fileInput = document.getElementById(
+                "reference_image",
+              ) as HTMLInputElement;
+              if (fileInput) fileInput.click();
+            }
+          }}
+          onDragOver={!evolveTarget ? onDragOver : undefined}
+          onDrop={!evolveTarget ? onDrop : undefined}
+        >
+          {previewUrl ? (
+            <div className="relative flex h-30 w-full items-center justify-center p-2">
+              <img
+                src={previewUrl}
+                alt={fileName || "Reference Sketch"}
+                className="h-full w-full rounded object-contain drop-shadow-md"
+              />
             </div>
-          </div>
-        ) : (
-          <span className="my-auto">
-            {fileName ? `[ ${fileName} ]` : "[ Drop sketch file or click to attach ]"}
-          </span>
-        )}
-      </button>
-    </div>
-  );
-}
+          ) : (
+            <span className="my-auto">
+              {fileName ? `[ ${fileName} ]` : "[ UPLOAD REFERENCE ]"}
+            </span>
+          )}
+        </button>
+      </div>
+    );
+  },
+);
+ReferenceUpload.displayName = "ReferenceUpload";
 
 interface SubmitControlsProps {
   isPending: boolean;
@@ -258,7 +266,7 @@ export function SubmitControls({
           onClick={onCancelEvolve}
           disabled={isPending}
           className={cn(
-            "mb-3 w-full cursor-pointer border border-(--graphite) bg-transparent p-2",
+            "mb-3 w-full cursor-pointer rounded-md border border-(--graphite) bg-transparent p-2",
             "font-mono text-[0.75rem] font-semibold tracking-[1px] text-(--graphite) uppercase",
             "hover:bg-[rgba(28,28,26,0.05)] disabled:opacity-50",
           )}
@@ -271,12 +279,12 @@ export function SubmitControls({
         type="submit"
         disabled={isPending}
         className={cn(
-          "relative w-full cursor-pointer overflow-hidden p-3 font-mono text-[0.85rem] font-semibold",
-          "tracking-[2px] uppercase transition-all duration-200 active:translate-y-0.5 active:shadow-none",
+          "relative w-full cursor-pointer overflow-hidden rounded-md border border-transparent p-3 font-mono text-[0.85rem] font-bold",
+          "tracking-[2px] uppercase shadow-md transition-all duration-200 active:translate-y-0.5 active:shadow-sm",
           "disabled:cursor-not-allowed disabled:opacity-50",
           evolveTarget
-            ? "border border-(--blueprint) bg-(--blueprint) text-(--paper) hover:bg-[#20496e] hover:shadow-[4px_4px_0px_rgba(42,92,139,0.2)]"
-            : "border border-(--red-pencil) bg-(--red-pencil) text-(--paper) hover:bg-[#bd3124] hover:shadow-[4px_4px_0px_rgba(28,28,26,0.08)]",
+            ? "bg-(--blueprint) text-(--paper) hover:bg-[#81a1c1]"
+            : "bg-(--blueprint) text-(--paper) hover:bg-[#81a1c1]",
         )}
       >
         {isPending ? (

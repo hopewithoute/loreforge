@@ -33,17 +33,17 @@ export function SiblingDeck({ siblings, isTrackPending }: SiblingDeckProps) {
         <>
           <div
             className={cn(
-              "pointer-events-none absolute top-2 left-2 z-0 h-[calc(100%-2.5rem)] w-full",
-              "border border-(--graphite) bg-(--paper) opacity-60 transition-transform",
+              "pointer-events-none absolute top-0 left-0 z-0 h-[calc(100%-2.5rem)] w-full",
+              "rounded-xl border border-[rgba(15,23,42,0.1)] bg-(--paper) opacity-60 transition-transform",
             )}
-            style={{ transform: "rotate(3deg)" }}
+            style={{ transform: "translate(8px, 8px)" }}
           />
           <div
             className={cn(
-              "pointer-events-none absolute top-1 left-1 z-0 h-[calc(100%-2.5rem)] w-full",
-              "border border-(--graphite) bg-[#f0eee9] opacity-80 transition-transform",
+              "pointer-events-none absolute top-0 left-0 z-0 h-[calc(100%-2.5rem)] w-full",
+              "rounded-xl border border-[rgba(15,23,42,0.1)] bg-[#f8fafc] opacity-80 transition-transform",
             )}
-            style={{ transform: "rotate(-1.5deg)" }}
+            style={{ transform: "translate(4px, 4px)" }}
           />
         </>
       )}
@@ -57,14 +57,14 @@ export function SiblingDeck({ siblings, isTrackPending }: SiblingDeckProps) {
       {hasMultiple && (
         <div
           className={cn(
-            "z-10 mt-1 flex flex-row items-center justify-between border border-(--graphite) bg-(--paper) px-2 py-1",
-            "font-mono text-xs text-(--pencil-gray) drop-shadow-[2px_2px_0_rgba(28,28,26,0.1)]",
+            "z-10 mt-1 flex flex-row items-center justify-between rounded-md border border-[rgba(15,23,42,0.1)] bg-(--paper) px-2 py-1",
+            "font-mono text-xs font-bold text-(--pencil-gray) shadow-sm",
           )}
         >
           <button
             type="button"
             onClick={goNext}
-            className="cursor-pointer px-2 py-1 font-bold transition-colors hover:text-(--red-pencil)"
+            className="cursor-pointer px-2 py-1 transition-colors hover:text-(--blueprint)"
           >
             &larr; OLDER
           </button>
@@ -76,7 +76,7 @@ export function SiblingDeck({ siblings, isTrackPending }: SiblingDeckProps) {
           <button
             type="button"
             onClick={goPrev}
-            className="cursor-pointer px-2 py-1 font-bold transition-colors hover:text-(--red-pencil)"
+            className="cursor-pointer px-2 py-1 transition-colors hover:text-(--blueprint)"
           >
             NEWER &rarr;
           </button>
