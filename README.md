@@ -5,8 +5,13 @@ LoreForge is an game concept image generator built with FastAPI, Vite, React, an
 ## Quick Start (Under 15 Minutes)
 
 ### 1. Prerequisites
-- **Python**: Use [uv](https://github.com/astral-sh/uv) (for ultra-fast Python package management).
-- **Node.js**: v18+ and `npm` (for the frontend).
+Ensure you have the following installed before starting:
+
+- **uv** (Ultra-fast Python package manager):
+  - macOS / Linux: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+  - Windows: `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
+  - Or see [official docs](https://github.com/astral-sh/uv).
+- **Node.js**: v24 LTS and `npm` (Download from [nodejs.org](https://nodejs.org/)).
 
 ### 2. Environment Setup & Cloudflare Credentials
 LoreForge uses Cloudflare's free Workers AI tier for image generation.
@@ -68,3 +73,23 @@ npm run test
 cd backend
 uv run pytest
 ```
+
+---
+
+## Production Deployment (Under 5 Minutes)
+
+LoreForge is optimized for a single-node deployment (e.g., $5 VPS) using a highly efficient **Multi-Stage Docker Build** and **Docker Compose**. 
+
+1. Ensure you have Docker and Docker Compose installed on your server.
+2. Clone the repository and navigate to the project root.
+3. Ensure your `.env` file is ready inside the `backend` directory:
+   ```bash
+   cp backend/.env.example backend/.env
+   # Edit backend/.env with your Cloudflare API Token
+   ```
+4. Build and start the container in detached mode:
+   ```bash
+   docker compose up -d --build
+   ```
+
+The application will be available on **port 8000**. The SQLite database and generated images are safely persisted using Docker Named Volumes (`loreforge_data` and `loreforge_media`), so your data survives container restarts and rebuilds.
