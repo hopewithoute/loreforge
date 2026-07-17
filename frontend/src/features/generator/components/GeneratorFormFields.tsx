@@ -126,7 +126,7 @@ export const PromptField = forwardRef<HTMLTextAreaElement, PromptFieldProps>(
             "custom-scrollbar box-border min-h-30 w-full resize-y rounded-md border border-[rgba(15,23,42,0.15)] bg-transparent p-3",
             "font-mono text-xs leading-relaxed text-(--graphite)",
             "transition-all duration-200 focus:border-(--blueprint) focus:bg-[rgba(255,255,255,0.8)]",
-            "focus:shadow-[0_0_10px_rgba(129,161,193,0.2)] focus:outline-none! focus:ring-0! focus:ring-transparent! disabled:opacity-50",
+            "focus:shadow-[0_0_10px_rgba(129,161,193,0.2)] focus:ring-0! focus:ring-transparent! focus:outline-none! disabled:opacity-50",
             className,
           )}
           {...props}
@@ -206,7 +206,7 @@ export const ReferenceUpload = React.forwardRef<HTMLInputElement, ReferenceUploa
             "text-(--pencil-gray) uppercase transition-all duration-200",
             "hover:border-(--blueprint) hover:bg-[rgba(255,255,255,0.8)] hover:text-(--blueprint) hover:shadow-[0_0_10px_rgba(129,161,193,0.2)]",
             evolveTarget
-              ? "cursor-not-allowed border-(--blueprint) bg-[rgba(42,92,139,0.05)] opacity-100 hover:border-(--blueprint) hover:shadow-none bg-none!"
+              ? "cursor-not-allowed border-(--blueprint) bg-[rgba(42,92,139,0.05)] bg-none! opacity-100 hover:border-(--blueprint) hover:shadow-none"
               : "disabled:opacity-50",
           )}
           style={{

@@ -86,7 +86,6 @@ class CloudflareFluxAdapter(AIProvider):
         # DO NOT log headers to prevent leaking tokens
         logger.info(f"Dispatching to Cloudflare AI [{self.model}] with timeout {self.timeout}s.")
 
-
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 response = await client.post(url, headers=headers, data=data, files=files)
@@ -132,12 +131,12 @@ class CloudflareFluxAdapter(AIProvider):
                     msg = cf_error_message or f"Cloudflare returned {code} server error."
                     raise ProviderUnavailableError(f"Cloudflare Server Error: {msg}")
 
-            #Broken Response
+            # Broken Response
             try:
                 payload = response.json()
             except Exception as e:
                 raise ProviderBrokenResponseError("Cloudflare response was not valid JSON.") from e
-            #Broken Schema
+            # Broken Schema
             try:
                 parsed = CloudflareResponse.model_validate(payload)
             except ValidationError as e:
@@ -145,11 +144,11 @@ class CloudflareFluxAdapter(AIProvider):
                     "Cloudflare response failed schema validation."
                 ) from e
 
-            #No Image Found
+            # No Image Found
             if not parsed.result or not parsed.result.image:
                 raise ProviderBrokenResponseError("Cloudflare response missing 'result.image'.")
 
-            #Invalid Image
+            # Invalid Image
             try:
                 image_bytes = base64.b64decode(parsed.result.image, validate=True)
             except Exception as e:
@@ -177,7 +176,7 @@ class CloudflareFluxAdapter(AIProvider):
                 provider_model=self.model,
             )
 
-        #Network Error
+        # Network Error
         except httpx.TimeoutException as e:
             raise ProviderTimeoutError("Cloudflare API timed out.") from e
         except httpx.RequestError as e:

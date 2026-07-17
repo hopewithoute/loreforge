@@ -81,11 +81,11 @@ export function GeneratorForm({ onSubmit, isPending, serverError }: GeneratorFor
     if (data.existing_reference_id) {
       payload.existing_reference_id = data.existing_reference_id;
     }
-    
+
     if (data.sibling_id) {
       payload.sibling_id = data.sibling_id;
     }
-    
+
     if (refImage) {
       payload.reference_image = refImage;
     }

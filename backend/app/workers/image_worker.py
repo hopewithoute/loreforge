@@ -20,14 +20,14 @@ logger = logging.getLogger(__name__)
 def generate_image_task(asset_id: str, user_id: str) -> None:
     """
     FastAPI BackgroundTask entrypoint.
-    
-    Architectural note: We explicitly open a fresh, isolated DB session here. 
-    If we reused the request's DB session, this long-running (10-30s) task 
-    would hold the connection open, quickly exhausting the connection pool 
+
+    Architectural note: We explicitly open a fresh, isolated DB session here.
+    If we reused the request's DB session, this long-running (10-30s) task
+    would hold the connection open, quickly exhausting the connection pool
     under concurrent load. This ensures the web thread completes instantly.
-    
-    We also instantiate fresh `storage` and `provider` objects. Passing complex 
-    objects (like httpx.AsyncClient inside the provider) across threads can 
+
+    We also instantiate fresh `storage` and `provider` objects. Passing complex
+    objects (like httpx.AsyncClient inside the provider) across threads can
     cause event-loop attachment errors. Fresh instantiation guarantees thread-safety.
     """
     # Create concrete instances using central factories to prevent drift
@@ -49,10 +49,10 @@ async def _process_generation(
 ) -> None:
     """
     Core business logic for background generation.
-    
-    By accepting ONLY interfaces (AbstractFileSystem, AIProvider) and the 
-    Service layer, this function is completely decoupled from concrete 
-    implementations like local disk or Cloudflare. This makes it trivially 
+
+    By accepting ONLY interfaces (AbstractFileSystem, AIProvider) and the
+    Service layer, this function is completely decoupled from concrete
+    implementations like local disk or Cloudflare. This makes it trivially
     easy to unit test using mocks without hitting real infrastructure.
     """
     logger.info(f"Starting background generation for Asset: {asset_id}")
@@ -111,7 +111,7 @@ async def _process_generation(
         storage.pipe_file(final_path, result.image_bytes)
 
         # 4. Mark success atomically
-        # Relies on the atomic UPDATE in AssetService to prevent race conditions 
+        # Relies on the atomic UPDATE in AssetService to prevent race conditions
         # (e.g., if a server restart spawned a duplicate worker for this asset).
         updated_asset = service.mark_as_success(
             asset_id=asset_id,
