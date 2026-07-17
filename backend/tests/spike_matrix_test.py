@@ -70,9 +70,7 @@ async def generate_chain(adapter: CloudflareFluxAdapter, category: str, style: s
     print(f"[{category} | {style}] 2. Evolve 1")
     p2 = assemble(EVOLVE_MODIFIER, prompts[1])
     try:
-        r2 = await adapter.generate(
-            prompt=p2, reference_image_bytes=r1.image_bytes, strength=STRENGTH
-        )
+        r2 = await adapter.generate(prompt=p2, reference_image_bytes=r1.image_bytes)
         (dir_path / "02_evolve_1.png").write_bytes(r2.image_bytes)
     except Exception as e:
         print(f"Failed on evolve 1 for {category}_{style}: {e}")
@@ -82,9 +80,7 @@ async def generate_chain(adapter: CloudflareFluxAdapter, category: str, style: s
     print(f"[{category} | {style}] 3. Evolve 2")
     p3 = assemble(EVOLVE_MODIFIER, prompts[2])
     try:
-        r3 = await adapter.generate(
-            prompt=p3, reference_image_bytes=r2.image_bytes, strength=STRENGTH
-        )
+        r3 = await adapter.generate(prompt=p3, reference_image_bytes=r2.image_bytes)
         (dir_path / "03_evolve_2.png").write_bytes(r3.image_bytes)
     except Exception as e:
         print(f"Failed on evolve 2 for {category}_{style}: {e}")

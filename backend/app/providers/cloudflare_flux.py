@@ -8,7 +8,6 @@ from PIL import Image
 from pydantic import BaseModel, ValidationError
 
 from app.core.config import Settings, settings
-from app.core.constants import MimeType
 from app.core.errors import (
     ProviderBrokenResponseError,
     ProviderConfigError,
@@ -49,7 +48,7 @@ class CloudflareFluxAdapter(AIProvider):
         self,
         prompt: str,
         reference_image_bytes: bytes | list[bytes] | None = None,
-        strength: float | None = None,
+        seed: int | None = None,
     ) -> GeneratedImageResult:
 
         if (
@@ -69,8 +68,8 @@ class CloudflareFluxAdapter(AIProvider):
             "height": str(self.height),
         }
 
-        if strength is not None:
-            data["strength"] = str(strength)
+        if seed is not None:
+            data["seed"] = str(seed)
 
         files = None
         if reference_image_bytes:
@@ -82,10 +81,11 @@ class CloudflareFluxAdapter(AIProvider):
 
             # Cloudflare FLUX models support up to 4 images
             for i, img_bytes in enumerate(reference_images[:4]):
-                files[f"input_image_{i}"] = (f"reference_{i}.png", img_bytes, MimeType.PNG)
+                files[f"input_image_{i}"] = (f"reference_{i}.png", img_bytes, "image/png")
 
-        logger.info(f"Dispatching to Cloudflare AI [{self.model}] with timeout {self.timeout}s.")
         # DO NOT log headers to prevent leaking tokens
+        logger.info(f"Dispatching to Cloudflare AI [{self.model}] with timeout {self.timeout}s.")
+
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -132,11 +132,12 @@ class CloudflareFluxAdapter(AIProvider):
                     msg = cf_error_message or f"Cloudflare returned {code} server error."
                     raise ProviderUnavailableError(f"Cloudflare Server Error: {msg}")
 
+            #Broken Response
             try:
                 payload = response.json()
             except Exception as e:
                 raise ProviderBrokenResponseError("Cloudflare response was not valid JSON.") from e
-
+            #Broken Schema
             try:
                 parsed = CloudflareResponse.model_validate(payload)
             except ValidationError as e:
@@ -144,9 +145,11 @@ class CloudflareFluxAdapter(AIProvider):
                     "Cloudflare response failed schema validation."
                 ) from e
 
+            #No Image Found
             if not parsed.result or not parsed.result.image:
                 raise ProviderBrokenResponseError("Cloudflare response missing 'result.image'.")
 
+            #Invalid Image
             try:
                 image_bytes = base64.b64decode(parsed.result.image, validate=True)
             except Exception as e:
@@ -174,6 +177,7 @@ class CloudflareFluxAdapter(AIProvider):
                 provider_model=self.model,
             )
 
+        #Network Error
         except httpx.TimeoutException as e:
             raise ProviderTimeoutError("Cloudflare API timed out.") from e
         except httpx.RequestError as e:

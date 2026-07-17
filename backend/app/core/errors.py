@@ -1,6 +1,17 @@
+from enum import StrEnum
 from typing import ClassVar
 
-from app.core.constants import ErrorCode
+
+class ErrorCode(StrEnum):
+    INTERNAL_ERROR = "INTERNAL_ERROR"
+    INVALID_FILE_TYPE = "INVALID_FILE_TYPE"
+    UPLOAD_TOO_LARGE = "UPLOAD_TOO_LARGE"
+    AI_TIMEOUT = "AI_TIMEOUT"
+    BROKEN_RESPONSE = "BROKEN_RESPONSE"
+    PROVIDER_CONFIG_ERROR = "PROVIDER_CONFIG_ERROR"
+    RATE_LIMITED = "RATE_LIMITED"
+    PROVIDER_UNAVAILABLE = "PROVIDER_UNAVAILABLE"
+    INVALID_PROMPT = "INVALID_PROMPT"
 
 
 class DomainError(Exception):

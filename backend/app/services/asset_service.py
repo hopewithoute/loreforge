@@ -1,5 +1,6 @@
 import contextlib
 import logging
+import random
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import cast
@@ -8,7 +9,7 @@ import fsspec
 from sqlalchemy import CursorResult, select, update
 from sqlalchemy.orm import Session
 
-from app.core.constants import ErrorCode
+from app.core.errors import ErrorCode
 from app.db.schema import Asset
 from app.models.asset import AssetCreate, AssetEvolve, AssetRead, AssetStatus
 from app.services.image_utils import prepare_provider_image
@@ -45,13 +46,14 @@ class AssetService:
     ) -> AssetRead:
         # We allocate the asset ID early so we can use it to create
         # a strictly isolated directory for this asset's files.
-        asset_id = str(uuid.uuid4())
+        asset_id = str(uuid.uuid7())
         asset = Asset(
             id=asset_id,
             user_id=user_id,
             prompt=data.prompt,
             category=data.category.value,
             style=data.style.value,
+            seed=random.randint(0, 4294967295),
         )
 
         if sibling_id:
@@ -139,21 +141,62 @@ class AssetService:
                 desc_ids.extend(get_descendants(child_id))
             return desc_ids
 
-        descendant_ids = get_descendants(asset_id)
-        all_ids_to_delete = [asset_id, *descendant_ids]
+        # ---------------------------------------------------------
+        # NEW RULE: Re-parenting (Survivor Succession)
+        # ---------------------------------------------------------
+        # If the asset being deleted has siblings, we DO NOT prune its children.
+        # Instead, we transfer custody of its children to the oldest surviving sibling,
+        # and if the deleted asset was the root anchor, we promote the survivor to root.
+
+        # 1. Find the sibling group ID
+        group_id = asset.sibling_id or asset.id
+
+        # 2. Find surviving siblings (ordered by oldest first)
+        stmt = (
+            select(Asset)
+            .where(Asset.id != asset_id)
+            .where((Asset.sibling_id == group_id) | (Asset.id == group_id))
+            .order_by(Asset.created_at.asc())
+        )
+        survivors = self._db.scalars(stmt).all()
+
+        if survivors:
+            # We have an heir!
+            heir = survivors[0]
+
+            # 3. Transfer custody of direct children to the heir
+            stmt_children = select(Asset).where(Asset.parent_id == asset_id)
+            children = self._db.scalars(stmt_children).all()
+            for child in children:
+                child.parent_id = heir.id
+
+            # 4. If the deleted asset was the root (anchor) of the sibling group,
+            # we must promote the heir to be the new root.
+            if asset.sibling_id is None:
+                heir.sibling_id = None
+                for other_survivor in survivors[1:]:
+                    other_survivor.sibling_id = heir.id
+
+            self._db.commit()
+
+            # Since we reparented the children, we ONLY delete the asset itself.
+            all_ids_to_delete = [asset_id]
+
+        else:
+            # No survivors. We prune the entire lineage.
+            descendant_ids = get_descendants(asset_id)
+            all_ids_to_delete = [asset_id, *descendant_ids]
 
         # Ground Truth Rule: Lineage Lockdown
-        # Cannot delete a lineage if any of its members is currently generating (pending)
-        stmt = select(Asset.status).where(Asset.id.in_(all_ids_to_delete))
-        statuses = self._db.scalars(stmt).all()
+        # Cannot delete if any of its members to be deleted is currently generating (pending)
+        stmt_status = select(Asset.status).where(Asset.id.in_(all_ids_to_delete))
+        statuses = self._db.scalars(stmt_status).all()
         if "pending" in statuses:
             raise ValueError("Cannot delete lineage with pending generations")
 
         try:
             # Delete from DB
             for d_id in reversed(all_ids_to_delete):
-                # We delete in reverse to avoid foreign key constraint issues if any,
-                # though SQLite 'SET NULL' doesn't restrict deletes.
                 a = self._db.scalar(select(Asset).where(Asset.id == d_id))
                 if a:
                     self._db.delete(a)
@@ -168,33 +211,21 @@ class AssetService:
             self._db.rollback()
             raise
 
-    def retry_asset(self, asset_id: str, user_id: str) -> AssetRead | None:
-        asset = self._get_asset_orm(asset_id, user_id)
-        if not asset or asset.status != AssetStatus.failed.value:
-            return None
-
-        # Reset status and clear error messages
-        asset.status = AssetStatus.pending.value
-        asset.error_code = None
-        asset.error_message = None
-
-        self._db.commit()
-        self._db.refresh(asset)
-        return AssetRead.model_validate(asset)
-
     def evolve_asset(self, parent_id: str, user_id: str, data: AssetEvolve) -> AssetRead | None:
         parent = self._get_asset_orm(parent_id, user_id)
         if not parent or not parent.generated_image_path:
             return None
 
-        asset_id = str(uuid.uuid4())
+        asset_id = str(uuid.uuid7())
         asset = Asset(
             id=asset_id,
             user_id=user_id,
             prompt=data.prompt,
             category=data.category.value,
             style=data.style.value,
+            seed=random.randint(0, 4294967295),
             parent_id=parent_id,
+            sibling_id=None,
         )
 
         try:
@@ -233,9 +264,12 @@ class AssetService:
     ) -> AssetRead | None:
         """
         Safely transitions an asset OUT of the 'pending' state.
-        This is an atomic UPDATE WHERE status = pending.
-        It protects against race conditions where multiple background
-        workers might try to mark the same asset as success/failed simultaneously.
+        This uses an atomic UPDATE WHERE status = pending.
+
+        While strict race condition protection might be overkill for our
+        current traffic level, this atomic approach is just as simple (if not
+        simpler) than a naive read-then-update pattern. Building in concurrency
+        safety from day one with zero extra overhead is good.
         """
         stmt = (
             update(Asset)
@@ -302,6 +336,7 @@ def reconcile_stale_assets(db: Session, threshold: timedelta | None = None) -> i
     Reconcile stale pending assets that were interrupted by a server restart.
     Marks them as failed so they don't stay pending forever.
     Only targets assets older than the given threshold (default 5 minutes).
+    In Our Case its default to 0 seconds, since the service is single instance.
     """
     active_threshold = threshold if threshold is not None else STALE_ASSET_THRESHOLD
     stale_threshold = datetime.now(UTC) - active_threshold

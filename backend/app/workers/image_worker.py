@@ -7,8 +7,7 @@ from typing import cast
 import fsspec
 
 from app.bootstrap import get_ai_provider, get_storage_driver
-from app.core.constants import ErrorCode
-from app.core.errors import ProviderError
+from app.core.errors import ErrorCode, ProviderError
 from app.db.database import SessionLocal
 from app.models.asset import AssetStatus
 from app.providers.base import AIProvider
@@ -21,7 +20,15 @@ logger = logging.getLogger(__name__)
 def generate_image_task(asset_id: str, user_id: str) -> None:
     """
     FastAPI BackgroundTask entrypoint.
-    Creates concrete dependencies and starts a fresh DB session.
+    
+    Architectural note: We explicitly open a fresh, isolated DB session here. 
+    If we reused the request's DB session, this long-running (10-30s) task 
+    would hold the connection open, quickly exhausting the connection pool 
+    under concurrent load. This ensures the web thread completes instantly.
+    
+    We also instantiate fresh `storage` and `provider` objects. Passing complex 
+    objects (like httpx.AsyncClient inside the provider) across threads can 
+    cause event-loop attachment errors. Fresh instantiation guarantees thread-safety.
     """
     # Create concrete instances using central factories to prevent drift
     storage = get_storage_driver()
@@ -41,7 +48,12 @@ async def _process_generation(
     provider: AIProvider,
 ) -> None:
     """
-    Core business logic for background generation using ONLY interfaces (Protocols).
+    Core business logic for background generation.
+    
+    By accepting ONLY interfaces (AbstractFileSystem, AIProvider) and the 
+    Service layer, this function is completely decoupled from concrete 
+    implementations like local disk or Cloudflare. This makes it trivially 
+    easy to unit test using mocks without hitting real infrastructure.
     """
     logger.info(f"Starting background generation for Asset: {asset_id}")
 
@@ -60,13 +72,10 @@ async def _process_generation(
         # 1. Prepare inputs
         reference_images: list[bytes] = []
         is_evolve_mode = False
-        strength: float | None = None
-
         if asset.prepared_input_path:
             # If there's a prepared input but no original reference, it came from Evolve
             if not asset.reference_image_path:
                 is_evolve_mode = True
-                strength = 0.70
 
                 # The asset was prepared in AssetService.evolve_asset, where the parent's
                 # generated image was converted and saved to this asset's prepared_input_path.
@@ -78,17 +87,22 @@ async def _process_generation(
                     pass
             else:
                 # It came from a user sketch (Create/Regenerate)
-                strength = 0.85
                 img_bytes = cast(bytes, storage.cat_file(asset.prepared_input_path))
                 reference_images.append(img_bytes)
 
-        prompt = build_prompt(asset.category, asset.style, asset.prompt, is_evolve=is_evolve_mode)
+        prompt = build_prompt(
+            asset.category,
+            asset.style,
+            asset.prompt,
+            has_reference=bool(reference_images),
+            is_evolve=is_evolve_mode,
+        )
 
         # 2. Generate Image
         result = await provider.generate(
             prompt=prompt,
             reference_image_bytes=reference_images if reference_images else None,
-            strength=strength,
+            seed=asset.seed,
         )
 
         # 3. Save Image to a distinct output filename
@@ -97,6 +111,8 @@ async def _process_generation(
         storage.pipe_file(final_path, result.image_bytes)
 
         # 4. Mark success atomically
+        # Relies on the atomic UPDATE in AssetService to prevent race conditions 
+        # (e.g., if a server restart spawned a duplicate worker for this asset).
         updated_asset = service.mark_as_success(
             asset_id=asset_id,
             user_id=user_id,
@@ -107,7 +123,8 @@ async def _process_generation(
         )
 
         if not updated_asset:
-            # We lost the database race! Another worker already successfully marked this asset.
+            # If rowcount was 0 during the atomic update, another worker beat us to it.
+            # We discard the duplicate image we just generated to save space.
             logger.info(f"Asset {asset_id} was already completed. Discarding output {final_path}.")
             with contextlib.suppress(FileNotFoundError):
                 storage.rm(final_path)

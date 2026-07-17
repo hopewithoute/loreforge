@@ -39,7 +39,8 @@ async def main():
     )
     print(f"Generating Image 2 (Evolve Sword)...\nPrompt: {prompt2}\n")
     res2 = await adapter.generate(
-        prompt=prompt2, reference_image_bytes=res1.image_bytes, strength=0.70
+        prompt=prompt2,
+        reference_image_bytes=res1.image_bytes,
     )
     Path("tests/img2_sword.png").write_bytes(res2.image_bytes)
     print("Saved img2_sword.png\n")
@@ -53,7 +54,8 @@ async def main():
     )
     print(f"Generating Image 3 (Evolve Shield)...\nPrompt: {prompt3}\n")
     res3 = await adapter.generate(
-        prompt=prompt3, reference_image_bytes=res2.image_bytes, strength=0.70
+        prompt=prompt3,
+        reference_image_bytes=res2.image_bytes,
     )
     Path("tests/img3_shield.png").write_bytes(res3.image_bytes)
     print("Saved img3_shield.png\n")

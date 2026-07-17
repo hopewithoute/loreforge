@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 
-from app.core.constants import ErrorCode
+from app.core.errors import ErrorCode
 from app.db.schema import Base
 from app.models.asset import AssetCategory, AssetCreate, AssetStatus, AssetStyle
 from app.providers.cloudflare_flux import CloudflareFluxAdapter

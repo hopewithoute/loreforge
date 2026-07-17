@@ -26,7 +26,7 @@ class AIProvider(Protocol):
         self,
         prompt: str,
         reference_image_bytes: bytes | list[bytes] | None = None,
-        strength: float | None = None,
+        seed: int | None = None,
     ) -> GeneratedImageResult:
         """
         Generates an image from a prompt and an optional reference image.

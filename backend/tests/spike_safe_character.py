@@ -62,9 +62,7 @@ async def main():
     print(f"[{category} | {style} (SAFE)] 2. Evolve 1")
     p2 = assemble(EVOLVE_MODIFIER, SAFE_PROMPTS[1])
     try:
-        r2 = await adapter.generate(
-            prompt=p2, reference_image_bytes=r1.image_bytes, strength=STRENGTH
-        )
+        r2 = await adapter.generate(prompt=p2, reference_image_bytes=r1.image_bytes)
         (dir_path / "02_evolve_1.png").write_bytes(r2.image_bytes)
         print(" -> Success!")
     except Exception as e:
@@ -75,9 +73,7 @@ async def main():
     print(f"[{category} | {style} (SAFE)] 3. Evolve 2")
     p3 = assemble(EVOLVE_MODIFIER, SAFE_PROMPTS[2])
     try:
-        r3 = await adapter.generate(
-            prompt=p3, reference_image_bytes=r2.image_bytes, strength=STRENGTH
-        )
+        r3 = await adapter.generate(prompt=p3, reference_image_bytes=r2.image_bytes)
         (dir_path / "03_evolve_2.png").write_bytes(r3.image_bytes)
         print(" -> Success!")
     except Exception as e:

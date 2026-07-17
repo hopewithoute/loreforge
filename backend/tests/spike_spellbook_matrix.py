@@ -58,9 +58,7 @@ async def main():
             prompt = assemble(prefix, user_prompt)
 
             try:
-                res = await adapter.generate(
-                    prompt=prompt, reference_image_bytes=base_bytes, strength=strength
-                )
+                res = await adapter.generate(prompt=prompt, reference_image_bytes=base_bytes)
                 filename = f"{out_dir}/{p_name}_s{str(strength).replace('.', '')}.png"
                 Path(filename).write_bytes(res.image_bytes)
                 print(f" -> Saved {filename}")

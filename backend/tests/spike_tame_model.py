@@ -44,7 +44,6 @@ async def main():
     res_a = await adapter.generate(
         prompt=assemble(mod_a, user_input_evolve),
         reference_image_bytes=res_base.image_bytes,
-        strength=0.55,
     )
     Path("tests/tame_A_low_str.png").write_bytes(res_a.image_bytes)
     print("Saved tame_A_low_str.png\n")
@@ -55,7 +54,6 @@ async def main():
     res_b = await adapter.generate(
         prompt=assemble(mod_b, user_input_evolve),
         reference_image_bytes=res_base.image_bytes,
-        strength=0.70,
     )
     Path("tests/tame_B_med_str.png").write_bytes(res_b.image_bytes)
     print("Saved tame_B_med_str.png\n")
@@ -66,7 +64,6 @@ async def main():
     res_c = await adapter.generate(
         prompt=assemble(mod_c, user_input_evolve),
         reference_image_bytes=res_base.image_bytes,
-        strength=0.85,
     )
     Path("tests/tame_C_high_str.png").write_bytes(res_c.image_bytes)
     print("Saved tame_C_high_str.png\n")
@@ -77,7 +74,6 @@ async def main():
     res_d = await adapter.generate(
         prompt=assemble(mod_d, user_input_evolve),
         reference_image_bytes=res_base.image_bytes,
-        strength=0.70,
     )
     Path("tests/tame_D_soft_prompt.png").write_bytes(res_d.image_bytes)
     print("Saved tame_D_soft_prompt.png\n")

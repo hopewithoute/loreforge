@@ -6,7 +6,7 @@ from fsspec.implementations.memory import MemoryFileSystem
 from PIL import Image
 from sqlalchemy.orm import Session
 
-from app.core.constants import ErrorCode
+from app.core.errors import ErrorCode
 from app.db.schema import Asset
 from app.models.asset import AssetCategory, AssetCreate, AssetStatus, AssetStyle
 from app.services.asset_service import AssetService, reconcile_stale_assets
