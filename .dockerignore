@@ -1,12 +1,36 @@
+# Node & Frontend
 node_modules/
 dist/
+frontend/dist/
+frontend/node_modules/
+
+# Python & Backend
 .venv/
 __pycache__/
 .pytest_cache/
 .ruff_cache/
 .coverage
-data/
-media/
+*.pyc
+*.pyo
+
+# Data & Media
+backend/data/
+backend/media/
 *.sqlite3
+*.sqlite
+
+# Environment Variables
 .env
+.env.*
+!.env.example
+
+# Git & Tooling
 .git/
+.github/
+.vscode/
+.idea/
+.DS_Store
+
+# Documentation & Tests (prevent large files context leak)
+docs/
+backend/tests/

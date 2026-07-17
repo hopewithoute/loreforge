@@ -4,6 +4,8 @@
 
 # LoreForge
 
+**🚀 Live Demo:** [https://loreforge.my.id/](https://loreforge.my.id/)
+
 LoreForge is an game concept image generator built with FastAPI, Vite, React, and Cloudflare Workers AI.
 
 ## Quick Start (Under 15 Minutes)
