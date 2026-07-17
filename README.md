@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/origami_anvil_logo_1784206199861.jpg" alt="LoreForge Logo" width="256" />
+  <img src="frontend/public/favicon.svg" alt="LoreForge Logo" width="256" />
 </div>
 
 # LoreForge
