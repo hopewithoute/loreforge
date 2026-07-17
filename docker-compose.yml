@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: loreforge:latest
+    container_name: loreforge_app
+    restart: unless-stopped
+    env_file:
+      - backend/.env  # Inject environment variables (CLOUDFLARE_API_TOKEN, dll)
+    ports:
+      - "8000:8000"
+    volumes:
+      - loreforge_data:/app/backend/data
+      - loreforge_media:/app/backend/media
+    environment:
+      - NODE_ENV=production
+volumes:
+  loreforge_data:
+    name: loreforge_data
+  loreforge_media:
+    name: loreforge_media
