@@ -13,7 +13,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # access to the values within the .ini file in use.
 config = context.config
 from app.core.config import settings
+from app.db.database import _ensure_sqlite_parent
 
+_ensure_sqlite_parent(settings.database_url)
 config.set_main_option("sqlalchemy.url", settings.database_url)
 
 # Interpret the config file for Python logging.
